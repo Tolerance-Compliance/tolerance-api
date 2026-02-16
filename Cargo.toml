@@ -1,0 +1,27 @@
+[package]
+name = "cmmc-api"
+authors = [ "Sam Sporidis <samsporidissoftware@protonmail.com>" ]
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "cmmc-api"
+path = "src/main.rs"
+
+[lib]
+name = "cmmc_api"
+path = "src/lib.rs"
+
+[dependencies]
+axum = { version = "0.7", features = ["macros"] }
+tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.6", features = ["cors", "trace", "limit"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres", "time", "migrate", "ipnetwork"] }
+time = { version = "0.3", features = ["serde", "macros", "formatting", "parsing"] }
+thiserror = "2"
+chrono = { version = "0.4", features = ["serde"] }
+dotenvy = "0.15"
