@@ -1,3 +1,4 @@
-pub mod health;
+//! Core HTTP handlers (health, errors)
+
 pub mod error;
-pub mod cmmc;
+pub mod health;

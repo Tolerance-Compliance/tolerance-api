@@ -1,12 +1,16 @@
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use tracing::info;
-use tokio::net::TcpListener;
-
-use cmmc_api::routing::app;
-use cmmc_api::handler::cmmc::CmmcState;
+//! CMMC API Server
+//!
+//! REST API for NIST SP 800-171 Rev 3 security requirements.
 
 use std::error::Error;
 use std::net::SocketAddr;
+
+use tokio::net::TcpListener;
+use tracing::info;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+use cmmc_api::cmmc::CmmcState;
+use cmmc_api::routing::app;
 
 const DEFAULT_PORT: u16 = 3000;
 const DEFAULT_HOST: &str = "0.0.0.0";
@@ -24,7 +28,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    info!("Starting {} v{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+    info!(
+        "Starting {} v{}",
+        env!("CARGO_PKG_NAME"),
+        env!("CARGO_PKG_VERSION")
+    );
 
     // Load NIST 800-171 data
     let data_path = std::env::var("NIST_DATA_PATH").unwrap_or_else(|_| NIST_DATA_PATH.to_string());
@@ -48,8 +56,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     axum::serve(
         listener,
-        app.into_make_service_with_connect_info::<SocketAddr>()
-    ).await?;
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await?;
 
     Ok(())
 }
