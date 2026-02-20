@@ -1,4 +1,4 @@
-//! CMMC API Server
+//! Tolerance API Server
 //!
 //! REST API for NIST SP 800-171 Rev 3 security requirements.
 
@@ -9,8 +9,8 @@ use tokio::net::TcpListener;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use cmmc_api::cmmc::CmmcState;
-use cmmc_api::routing::app;
+use tolerance_api::cmmc::CmmcState;
+use tolerance_api::routing::app;
 
 const DEFAULT_PORT: u16 = 3000;
 const DEFAULT_HOST: &str = "0.0.0.0";
@@ -23,7 +23,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "cmmc_api=info,tower_http=debug".into()),
+                .unwrap_or_else(|_| "tolerance_api=info,tower_http=debug".into()),
         )
         .with(tracing_subscriber::fmt::layer())
         .init();

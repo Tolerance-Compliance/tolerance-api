@@ -1,15 +1,15 @@
 [package]
-name = "cmmc-api"
+name = "tolerance-api"
 authors = [ "Sam Sporidis <samsporidissoftware@protonmail.com>" ]
 version = "0.1.0"
 edition = "2024"
 
 [[bin]]
-name = "cmmc-api"
+name = "tolerance-api"
 path = "src/main.rs"
 
 [lib]
-name = "cmmc_api"
+name = "tolerance_api"
 path = "src/lib.rs"
 
 [dependencies]
