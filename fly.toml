@@ -33,7 +33,7 @@ primary_region = 'iad'
 
 [scale]
   count = 1
-  memory_mb = 512
+  memory_mb = 1024
   max_per_region = 1
 
 [deploy]
@@ -43,4 +43,4 @@ primary_region = 'iad'
 [[vm]]
   cpu_kind = 'shared'
   cpus = 1
-  memory_mb = 512
+  memory_mb = 1024
