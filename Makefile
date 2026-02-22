@@ -30,7 +30,7 @@ stop: ## Stop the container and kill any leaked port process
 	docker compose down --remove-orphans
 	-lsof -ti :$(PORT) | xargs kill -9 2>/dev/null
 
-restart: stop build ## Rebuild from scratch
+rebuild: stop build ## Rebuild from scratch
 
 logs: ## Tail container logs
 	docker compose logs -f
