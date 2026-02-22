@@ -13,6 +13,19 @@ use crate::handler::error::ApiError;
 use super::query::{parse_level, ElementQuery};
 
 /// Get all elements with optional filtering and pagination
+#[utoipa::path(
+    get,
+    path = "/api/v1/cmmc/{level}/elements",
+    params(
+        ("level" = String, Path, description = "CMMC level (l2 for SP 800-171, l3 for SP 800-172)"),
+        ElementQuery
+    ),
+    responses(
+        (status = 200, description = "Paginated list of elements", body = PaginatedResponse<Element>),
+        (status = 404, description = "Level not found")
+    ),
+    tag = "CMMC"
+)]
 pub async fn get_elements(
     State(state): State<CmmcState>,
     Path(level): Path<String>,
@@ -53,6 +66,19 @@ pub async fn get_elements(
 }
 
 /// Get a specific element by identifier - O(1) lookup
+#[utoipa::path(
+    get,
+    path = "/api/v1/cmmc/{level}/elements/{id}",
+    params(
+        ("level" = String, Path, description = "CMMC level (l2 for SP 800-171, l3 for SP 800-172)"),
+        ("id" = String, Path, description = "Element identifier")
+    ),
+    responses(
+        (status = 200, description = "Element details", body = Element),
+        (status = 404, description = "Element not found")
+    ),
+    tag = "CMMC"
+)]
 pub async fn get_element(
     State(state): State<CmmcState>,
     Path((level, id)): Path<(String, String)>,
@@ -72,6 +98,18 @@ pub async fn get_element(
 }
 
 /// Get all requirements
+#[utoipa::path(
+    get,
+    path = "/api/v1/cmmc/{level}/requirements",
+    params(
+        ("level" = String, Path, description = "CMMC level (l2 for SP 800-171, l3 for SP 800-172)")
+    ),
+    responses(
+        (status = 200, description = "List of requirements", body = Vec<Element>),
+        (status = 404, description = "Level not found")
+    ),
+    tag = "CMMC"
+)]
 pub async fn get_requirements(
     State(state): State<CmmcState>,
     Path(level): Path<String>,
@@ -90,6 +128,18 @@ pub async fn get_requirements(
 }
 
 /// Get all security requirements
+#[utoipa::path(
+    get,
+    path = "/api/v1/cmmc/{level}/security-requirements",
+    params(
+        ("level" = String, Path, description = "CMMC level (l2 for SP 800-171, l3 for SP 800-172)")
+    ),
+    responses(
+        (status = 200, description = "List of security requirements", body = Vec<Element>),
+        (status = 404, description = "Level not found")
+    ),
+    tag = "CMMC"
+)]
 pub async fn get_security_requirements(
     State(state): State<CmmcState>,
     Path(level): Path<String>,

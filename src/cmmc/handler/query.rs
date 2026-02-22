@@ -13,7 +13,7 @@ pub fn parse_level(level: &str) -> Result<CmmcLevel, ApiError> {
 }
 
 /// Query parameters for filtering elements with pagination
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, utoipa::IntoParams)]
 pub struct ElementQuery {
     /// Filter by element type
     #[serde(rename = "type")]

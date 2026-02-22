@@ -11,6 +11,18 @@ use crate::handler::error::ApiError;
 use super::query::parse_level;
 
 /// Get all families - uses type index for O(f) where f = family count
+#[utoipa::path(
+    get,
+    path = "/api/v1/cmmc/{level}/families",
+    params(
+        ("level" = String, Path, description = "CMMC level (l2 for SP 800-171, l3 for SP 800-172)")
+    ),
+    responses(
+        (status = 200, description = "List of families", body = Vec<Family>),
+        (status = 404, description = "Level not found")
+    ),
+    tag = "CMMC"
+)]
 pub async fn get_families(
     State(state): State<CmmcState>,
     Path(level): Path<String>,
@@ -30,6 +42,19 @@ pub async fn get_families(
 }
 
 /// Get a specific family by identifier - O(1) lookup
+#[utoipa::path(
+    get,
+    path = "/api/v1/cmmc/{level}/families/{id}",
+    params(
+        ("level" = String, Path, description = "CMMC level (l2 for SP 800-171, l3 for SP 800-172)"),
+        ("id" = String, Path, description = "Family identifier")
+    ),
+    responses(
+        (status = 200, description = "Family details", body = Family),
+        (status = 404, description = "Family not found")
+    ),
+    tag = "CMMC"
+)]
 pub async fn get_family(
     State(state): State<CmmcState>,
     Path((level, id)): Path<(String, String)>,

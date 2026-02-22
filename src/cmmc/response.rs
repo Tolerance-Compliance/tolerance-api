@@ -1,14 +1,10 @@
-//! API response types
-//!
-//! These types are used for API responses and differ from the raw NIST data
-//! by providing nested, hierarchical structures.
-
 use serde::Serialize;
+use utoipa::ToSchema;
 
 use super::model::Document;
 
 /// A family with its nested requirements (API response)
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct Family {
     pub identifier: String,
     pub title: String,
@@ -16,7 +12,7 @@ pub struct Family {
 }
 
 /// A requirement with its security requirements (API response)
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct Requirement {
     pub identifier: String,
     pub title: String,
@@ -25,7 +21,7 @@ pub struct Requirement {
 }
 
 /// A security requirement with discussion and assessment (API response)
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct SecurityRequirement {
     pub identifier: String,
     pub title: String,
@@ -35,7 +31,7 @@ pub struct SecurityRequirement {
 }
 
 /// Summary statistics for the dataset
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct DataSummary {
     pub document: Document,
     pub family_count: usize,
@@ -45,11 +41,21 @@ pub struct DataSummary {
 }
 
 /// Paginated response wrapper
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct PaginatedResponse<T> {
-    pub data: Vec<T>,
-    pub total: usize,
-    pub limit: usize,
-    pub offset: usize,
+    pub data:     Vec<T>,
+    pub total:    usize,
+    pub limit:    usize,
+    pub offset:   usize,
     pub has_more: bool,
 }
+
+// type aliases for OpenAPI documentation.
+pub type         ElementListResponse = PaginatedResponse<crate::cmmc::model::Element>;
+pub type          FamilyListResponse = Vec<Family>;
+pub type     RequirementListResponse = Vec<crate::cmmc::model::Element>;
+pub type    RelationshipListResponse = Vec<crate::cmmc::model::Relationship>;
+pub type              FamilyResponse = Family;
+pub type             ElementResponse = crate::cmmc::model::Element;
+pub type ElementRelationshipResponse = Vec<crate::cmmc::model::Relationship>;
+pub type             SummaryResponse = DataSummary;

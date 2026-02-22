@@ -1,10 +1,3 @@
-//! Search index for O(1) lookups and fast text search
-//!
-//! The search index is built once at application startup and provides:
-//! - O(1) lookup by element identifier
-//! - O(1) filtering by element type
-//! - Fast text search via inverted index
-
 use std::collections::{HashMap, HashSet};
 
 use super::model::{Element, ElementType};
@@ -68,10 +61,8 @@ impl SearchIndex {
                 inverted_index.entry(word).or_default().insert(index);
             }
 
-            // Build identifier lookup
             by_identifier.insert(element.element_identifier.clone(), index);
 
-            // Group by type
             by_type.entry(element.element_type).or_default().push(index);
             *type_counts.entry(element.element_type).or_default() += 1;
 
@@ -93,12 +84,12 @@ impl SearchIndex {
         }
     }
 
-    /// Fast lookup by identifier - O(1)
+    /// Fast lookup by identifier
     pub fn get_by_identifier(&self, id: &str) -> Option<usize> {
         self.by_identifier.get(id).copied()
     }
 
-    /// Get all indices for a given element type - O(1)
+    /// Get all indices for a given element type
     pub fn get_by_type(&self, element_type: ElementType) -> &[usize] {
         self.by_type
             .get(&element_type)
@@ -106,7 +97,7 @@ impl SearchIndex {
             .unwrap_or(&[])
     }
 
-    /// Get count for a given element type - O(1)
+    /// Get count for a given element type
     pub fn count_by_type(&self, element_type: ElementType) -> usize {
         *self.type_counts.get(&element_type).unwrap_or(&0)
     }
@@ -123,11 +114,9 @@ impl SearchIndex {
             (0..self.indexed_elements.len()).collect()
         };
 
-        // If query is a single token, try inverted index first
         if query_tokens.len() == 1 {
             let token: &String = &query_tokens[0];
 
-            // Exact word match via inverted index - O(1)
             if let Some(matches) = self.inverted_index.get(token) {
                 let results: Vec<usize> = matches
                     .intersection(&candidate_indices)
@@ -139,7 +128,6 @@ impl SearchIndex {
             }
         }
 
-        // Fall back to substring search on pre-computed lowercase fields
         candidate_indices
             .into_iter()
             .filter(|&idx| {
@@ -152,7 +140,6 @@ impl SearchIndex {
     }
 }
 
-/// Tokenize text into lowercase words (splits on non-alphanumeric)
 fn tokenize(text: &str) -> Vec<String> {
     text.split(|c: char| !c.is_alphanumeric())
         .filter(|s: &&str| !s.is_empty() && s.len() > 1)

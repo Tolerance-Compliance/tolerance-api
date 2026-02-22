@@ -3,6 +3,7 @@
 //! These types map directly to the structure of the NIST CPRT JSON export.
 
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 /// Root structure for the NIST SP 800-171 JSON file
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,7 +27,7 @@ pub struct NistElements {
 }
 
 /// Document metadata
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Document {
     pub doc_identifier: String,
     pub name: String,
@@ -35,14 +36,14 @@ pub struct Document {
 }
 
 /// Relationship type definitions
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct RelationshipType {
     pub relationship_identifier: String,
     pub description: String,
 }
 
 /// CMMC maturity level
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 pub enum CmmcLevel {
     #[serde(rename = "l2")]
     L2,
@@ -78,7 +79,7 @@ impl std::str::FromStr for CmmcLevel {
 }
 
 /// Element types in the NIST data
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ElementType {
     Family,
@@ -100,7 +101,7 @@ pub enum ElementType {
 }
 
 /// A single element (family, requirement, or security requirement)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Element {
     pub element_type: ElementType,
     pub element_identifier: String,
@@ -110,7 +111,7 @@ pub struct Element {
 }
 
 /// Relationship between elements
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Relationship {
     pub source_element_identifier: String,
     pub source_doc_identifier: String,

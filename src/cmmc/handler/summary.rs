@@ -9,7 +9,19 @@ use crate::handler::error::ApiError;
 
 use super::query::parse_level;
 
-/// Get summary of the dataset for a given CMMC level - O(1) using pre-computed counts
+/// Get a summary of the dataset for a given CMMC level - O(1) using pre-computed counts
+#[utoipa::path(
+    get,
+    path = "/api/v1/cmmc/{level}/summary",
+    params(
+        ("level" = String, Path, description = "CMMC level (l2 for SP 800-171, l3 for SP 800-172)")
+    ),
+    responses(
+        (status = 200, description = "Summary retrieved successfully", body = DataSummary),
+        (status = 404, description = "Level not found")
+    ),
+    tag = "CMMC"
+)]
 pub async fn get_summary(
     State(state): State<CmmcState>,
     Path(level): Path<String>,

@@ -15,6 +15,7 @@ use crate::constant::{
     CMMC_REQUIREMENTS_ENDPOINT, CMMC_SECURITY_REQS_ENDPOINT, CMMC_SUMMARY_ENDPOINT,
     HEALTH_ENDPOINT,
 };
+use crate::doc::{favicon, openapi_json, swagger_ui};
 use crate::handler::health::health_check;
 
 /// Creates a permissive CORS layer for development/testing purposes.
@@ -29,17 +30,21 @@ fn create_cors_layer() -> CorsLayer {
 /// Build the application router with all routes
 pub fn app(state: CmmcState) -> Router {
     Router::new()
+        // Documentation routes
+        .route("/",                       get(swagger_ui))
+        .route("/api-docs/openapi.json",  get(openapi_json))
+        .route("/favicon.ico",            get(favicon))
         // Health check
-        .route(HEALTH_ENDPOINT, get(health_check))
+        .route(HEALTH_ENDPOINT,                 get(health_check))
         // CMMC / NIST 800-171 endpoints
-        .route(CMMC_SUMMARY_ENDPOINT, get(get_summary))
-        .route(CMMC_FAMILIES_ENDPOINT, get(get_families))
-        .route(CMMC_FAMILY_ENDPOINT, get(get_family))
-        .route(CMMC_ELEMENTS_ENDPOINT, get(get_elements))
-        .route(CMMC_ELEMENT_ENDPOINT, get(get_element))
-        .route(CMMC_REQUIREMENTS_ENDPOINT, get(get_requirements))
-        .route(CMMC_SECURITY_REQS_ENDPOINT, get(get_security_requirements))
-        .route(CMMC_RELATIONSHIPS_ENDPOINT, get(get_relationships))
+        .route(CMMC_SUMMARY_ENDPOINT,           get(get_summary))
+        .route(CMMC_FAMILIES_ENDPOINT,          get(get_families))
+        .route(CMMC_FAMILY_ENDPOINT,            get(get_family))
+        .route(CMMC_ELEMENTS_ENDPOINT,          get(get_elements))
+        .route(CMMC_ELEMENT_ENDPOINT,           get(get_element))
+        .route(CMMC_REQUIREMENTS_ENDPOINT,      get(get_requirements))
+        .route(CMMC_SECURITY_REQS_ENDPOINT,     get(get_security_requirements))
+        .route(CMMC_RELATIONSHIPS_ENDPOINT,     get(get_relationships))
         .route(CMMC_ELEMENT_RELATIONS_ENDPOINT, get(get_element_relationships))
         // Middleware
         .with_state(state)

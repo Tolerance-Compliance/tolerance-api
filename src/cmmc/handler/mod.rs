@@ -6,11 +6,11 @@
 //! - `elements` - Individual elements with search/filter
 //! - `relationships` - Element relationships
 
-mod query;
-mod summary;
-mod families;
-mod elements;
-mod relationships;
+pub mod query;
+pub mod summary;
+pub mod families;
+pub mod elements;
+pub mod relationships;
 
 pub use summary::get_summary;
 pub use families::{get_families, get_family};
