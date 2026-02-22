@@ -19,7 +19,7 @@ pub struct CmmcState {
 impl CmmcState {
     /// Create new state from NIST data, building the search index
     pub fn new(data: NistData) -> Self {
-        let index = SearchIndex::build(&data.response.elements.elements);
+        let index: SearchIndex = SearchIndex::build(&data.response.elements.elements);
         Self {
             data: Arc::new(data),
             index: Arc::new(index),
@@ -30,7 +30,7 @@ impl CmmcState {
     pub fn from_json_file(path: &str) -> Result<Self, std::io::Error> {
         let contents = std::fs::read_to_string(path)?;
         let data: NistData = serde_json::from_str(&contents)
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+            .map_err(|e: serde_json::Error| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
         Ok(Self::new(data))
     }
 

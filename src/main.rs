@@ -35,22 +35,22 @@ async fn main() -> Result<(), Box<dyn Error>> {
     );
 
     // Load NIST 800-171 data
-    let data_path = std::env::var("NIST_DATA_PATH").unwrap_or_else(|_| NIST_DATA_PATH.to_string());
+    let data_path: String = std::env::var("NIST_DATA_PATH").unwrap_or_else(|_| NIST_DATA_PATH.to_string());
     info!("Loading NIST 800-171 data from: {}", data_path);
 
-    let state = CmmcState::from_json_file(&data_path)?;
+    let state: CmmcState = CmmcState::from_json_file(&data_path)?;
     info!("NIST data loaded successfully");
 
-    let app = app(state);
+    let app: axum::Router = app(state);
 
-    let host = std::env::var("HOST").unwrap_or_else(|_| DEFAULT_HOST.to_string());
+    let host: String = std::env::var("HOST").unwrap_or_else(|_| DEFAULT_HOST.to_string());
     let port: u16 = std::env::var("PORT")
         .ok()
-        .and_then(|p| p.parse().ok())
+        .and_then(|p: String| p.parse().ok())
         .unwrap_or(DEFAULT_PORT);
 
-    let addr = format!("{}:{}", host, port);
-    let listener = TcpListener::bind(&addr).await?;
+    let addr: String = format!("{}:{}", host, port);
+    let listener: TcpListener = TcpListener::bind(&addr).await?;
 
     info!("Server listening on http://{}", addr);
 

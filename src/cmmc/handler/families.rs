@@ -12,14 +12,14 @@ use crate::handler::error::ApiError;
 
 /// Get all families - uses type index for O(f) where f = family count
 pub async fn get_families(State(state): State<CmmcState>) -> Json<Vec<Family>> {
-    let elements = state.elements();
-    let relationships = &state.data().response.elements.relationships;
-    let family_indices = state.index().get_by_type(ElementType::Family);
+    let elements: &[Element] = state.elements();
+    let relationships: &Vec<Relationship> = &state.data().response.elements.relationships;
+    let family_indices: &[usize] = state.index().get_by_type(ElementType::Family);
 
     let families: Vec<Family> = family_indices
         .iter()
         .filter_map(|&idx| elements.get(idx))
-        .map(|family| build_family(family, elements, relationships))
+        .map(|family: &Element| build_family(family, elements, relationships))
         .collect();
 
     Json(families)
@@ -30,18 +30,18 @@ pub async fn get_family(
     State(state): State<CmmcState>,
     Path(id): Path<String>,
 ) -> Result<Json<Family>, ApiError> {
-    let elements = state.elements();
-    let relationships = &state.data().response.elements.relationships;
+    let elements: &[Element] = state.elements();
+    let relationships: &Vec<Relationship> = &state.data().response.elements.relationships;
 
     // O(1) lookup via index
-    let idx = state
+    let idx: usize = state
         .index()
         .get_by_identifier(&id)
         .ok_or_else(|| ApiError::NotFound(format!("Family '{}' not found", id)))?;
 
     let family = elements
         .get(idx)
-        .filter(|e| e.element_type == ElementType::Family)
+        .filter(|e: &&Element| e.element_type == ElementType::Family)
         .ok_or_else(|| ApiError::NotFound(format!("Family '{}' not found", id)))?;
 
     Ok(Json(build_family(family, elements, relationships)))
@@ -52,7 +52,7 @@ pub async fn get_family(
 // ============================================================================
 
 fn build_family(family: &Element, elements: &[Element], relationships: &[Relationship]) -> Family {
-    let requirements = get_family_requirements(family, elements, relationships);
+    let requirements: Vec<Requirement> = get_family_requirements(family, elements, relationships);
     Family {
         identifier: family.element_identifier.clone(),
         title: family.title.clone(),
@@ -69,12 +69,12 @@ fn get_family_requirements(
 
     elements
         .iter()
-        .filter(|e| {
+        .filter(|e: &&Element| {
             e.element_type == ElementType::Requirement
                 && e.element_identifier.starts_with(family_prefix)
                 && e.element_identifier.len() > family_prefix.len()
         })
-        .map(|req| {
+        .map(|req: &Element| {
             let security_requirements =
                 get_requirement_security_requirements(req, elements, relationships);
             Requirement {
@@ -92,8 +92,8 @@ fn get_requirement_security_requirements(
     elements: &[Element],
     _relationships: &[Relationship],
 ) -> Vec<SecurityRequirement> {
-    let req_id = &requirement.element_identifier;
-    let sr_prefix = format!("SR-{}", req_id);
+    let req_id: &String = &requirement.element_identifier;
+    let sr_prefix: String = format!("SR-{}", req_id);
 
     elements
         .iter()
@@ -101,7 +101,7 @@ fn get_requirement_security_requirements(
             e.element_type == ElementType::SecurityRequirement
                 && e.element_identifier.starts_with(&sr_prefix)
         })
-        .map(|sr| {
+        .map(|sr: &Element| {
             let discussion =
                 find_related_text(elements, &sr.element_identifier, ElementType::Discussion);
             let assessment =
@@ -125,7 +125,7 @@ fn find_related_text(
 ) -> Option<String> {
     elements
         .iter()
-        .find(|e| e.element_type == element_type && e.element_identifier.contains(sr_identifier))
-        .map(|e| e.text.clone())
-        .filter(|t| !t.is_empty())
+        .find(|e: &&Element| e.element_type == element_type && e.element_identifier.contains(sr_identifier))
+        .map(|e: &Element| e.text.clone())
+        .filter(|t: &String| !t.is_empty())
 }

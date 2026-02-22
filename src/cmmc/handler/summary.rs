@@ -8,10 +8,10 @@ use crate::cmmc::state::CmmcState;
 
 /// Get summary of the NIST 800-171 data - O(1) using pre-computed counts
 pub async fn get_summary(State(state): State<CmmcState>) -> Json<DataSummary> {
-    let data = state.data();
-    let index = state.index();
+    let data: &crate::cmmc::NistData = state.data();
+    let index: &crate::cmmc::SearchIndex = state.index();
 
-    let summary = DataSummary {
+    let summary: DataSummary = DataSummary {
         document: data.response.elements.documents.first().cloned().unwrap_or_else(|| {
             Document {
                 doc_identifier: String::new(),

@@ -49,12 +49,12 @@ impl SearchIndex {
         let mut type_counts: HashMap<ElementType, usize> = HashMap::new();
 
         for (index, element) in elements.iter().enumerate() {
-            let identifier_lower = element.element_identifier.to_lowercase();
-            let title_lower = element.title.to_lowercase();
-            let text_lower = element.text.to_lowercase();
+            let identifier_lower: String = element.element_identifier.to_lowercase();
+            let title_lower: String = element.title.to_lowercase();
+            let text_lower: String = element.text.to_lowercase();
 
             // Tokenize for inverted index
-            let mut tokens = HashSet::new();
+            let mut tokens: HashSet<String> = HashSet::new();
             for word in tokenize(&identifier_lower) {
                 tokens.insert(word.clone());
                 inverted_index.entry(word).or_default().insert(index);
@@ -102,7 +102,7 @@ impl SearchIndex {
     pub fn get_by_type(&self, element_type: ElementType) -> &[usize] {
         self.by_type
             .get(&element_type)
-            .map(|v| v.as_slice())
+            .map(|v: &Vec<usize>| v.as_slice())
             .unwrap_or(&[])
     }
 
@@ -125,7 +125,7 @@ impl SearchIndex {
 
         // If query is a single token, try inverted index first
         if query_tokens.len() == 1 {
-            let token = &query_tokens[0];
+            let token: &String = &query_tokens[0];
 
             // Exact word match via inverted index - O(1)
             if let Some(matches) = self.inverted_index.get(token) {
@@ -143,7 +143,7 @@ impl SearchIndex {
         candidate_indices
             .into_iter()
             .filter(|&idx| {
-                let indexed = &self.indexed_elements[idx];
+                let indexed: &IndexedElement = &self.indexed_elements[idx];
                 indexed.identifier_lower.contains(&query_lower)
                     || indexed.title_lower.contains(&query_lower)
                     || indexed.text_lower.contains(&query_lower)
@@ -155,8 +155,8 @@ impl SearchIndex {
 /// Tokenize text into lowercase words (splits on non-alphanumeric)
 fn tokenize(text: &str) -> Vec<String> {
     text.split(|c: char| !c.is_alphanumeric())
-        .filter(|s| !s.is_empty() && s.len() > 1)
-        .map(|s| s.to_string())
+        .filter(|s: &&str| !s.is_empty() && s.len() > 1)
+        .map(|s: &str| s.to_string())
         .collect()
 }
 
@@ -176,7 +176,7 @@ mod tests {
 
     #[test]
     fn test_lookup_by_identifier() {
-        let elements = vec![
+        let elements: Vec<Element> = vec![
             make_element("03.01", "Access Control", "", ElementType::Family),
             make_element("03.02", "Awareness", "", ElementType::Family),
         ];
@@ -189,7 +189,7 @@ mod tests {
 
     #[test]
     fn test_filter_by_type() {
-        let elements = vec![
+        let elements: Vec<Element> = vec![
             make_element("03.01", "Access Control", "", ElementType::Family),
             make_element("03.01.01", "Account Mgmt", "", ElementType::Requirement),
         ];
@@ -202,11 +202,11 @@ mod tests {
 
     #[test]
     fn test_search() {
-        let elements = vec![
+        let elements: Vec<Element> = vec![
             make_element("03.01", "Access Control", "manage access", ElementType::Family),
             make_element("03.02", "Training", "security training", ElementType::Family),
         ];
-        let index = SearchIndex::build(&elements);
+        let index: SearchIndex = SearchIndex::build(&elements);
 
         let results = index.search("access", None);
         assert_eq!(results.len(), 1);

@@ -22,7 +22,7 @@ pub async fn get_element_relationships(
         .elements
         .relationships
         .iter()
-        .filter(|r| r.source_element_identifier == id || r.dest_element_identifier == id)
+        .filter(|r: &&Relationship| r.source_element_identifier == id || r.dest_element_identifier == id)
         .cloned()
         .collect();
 
