@@ -22,6 +22,7 @@ test: ## Run tests
 
 build: ## Build and start the production container
 	docker compose up -d --build
+	docker compose ps
 
 start: ## Start an existing container
 	docker compose up -d
