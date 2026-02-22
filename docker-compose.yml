@@ -1,0 +1,7 @@
+services:
+  api:
+    build:
+      context: .
+    container_name: tolerance-api
+    ports:
+      - "3000:3000"
