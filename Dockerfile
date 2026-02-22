@@ -12,6 +12,7 @@ ENV PORT=3000
 
 COPY --from=builder /app/target/release/tolerance-api ./
 COPY cprt-sp_800_171_3_0_0-20260215-171034.json ./
+COPY cprt-sp_800_172_1_0_0.json ./
 
 RUN addgroup -S -g 1001 rustapp && adduser -S -u 1001 -G rustapp rustapp
 USER rustapp
