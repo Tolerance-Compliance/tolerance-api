@@ -1,5 +1,3 @@
-//! Family endpoint handlers
-
 use axum::{
     extract::{Path, State},
     Json,
@@ -10,11 +8,17 @@ use crate::cmmc::response::{Family, Requirement, SecurityRequirement};
 use crate::cmmc::state::CmmcState;
 use crate::handler::error::ApiError;
 
+use super::query::parse_level;
+
 /// Get all families - uses type index for O(f) where f = family count
-pub async fn get_families(State(state): State<CmmcState>) -> Json<Vec<Family>> {
-    let elements: &[Element] = state.elements();
-    let relationships: &Vec<Relationship> = &state.data().response.elements.relationships;
-    let family_indices: &[usize] = state.index().get_by_type(ElementType::Family);
+pub async fn get_families(
+    State(state): State<CmmcState>,
+    Path(level): Path<String>,
+) -> Result<Json<Vec<Family>>, ApiError> {
+    let level = parse_level(&level)?;
+    let elements = state.elements(level).ok_or_else(|| ApiError::NotFound(format!("Level {} not loaded", level)))?;
+    let relationships = &state.data(level).unwrap().response.elements.relationships;
+    let family_indices = state.index(level).unwrap().get_by_type(ElementType::Family);
 
     let families: Vec<Family> = family_indices
         .iter()
@@ -22,20 +26,20 @@ pub async fn get_families(State(state): State<CmmcState>) -> Json<Vec<Family>> {
         .map(|family: &Element| build_family(family, elements, relationships))
         .collect();
 
-    Json(families)
+    Ok(Json(families))
 }
 
 /// Get a specific family by identifier - O(1) lookup
 pub async fn get_family(
     State(state): State<CmmcState>,
-    Path(id): Path<String>,
+    Path((level, id)): Path<(String, String)>,
 ) -> Result<Json<Family>, ApiError> {
-    let elements: &[Element] = state.elements();
-    let relationships: &Vec<Relationship> = &state.data().response.elements.relationships;
+    let level = parse_level(&level)?;
+    let elements = state.elements(level).ok_or_else(|| ApiError::NotFound(format!("Level {} not loaded", level)))?;
+    let relationships = &state.data(level).unwrap().response.elements.relationships;
+    let index = state.index(level).unwrap();
 
-    // O(1) lookup via index
-    let idx: usize = state
-        .index()
+    let idx: usize = index
         .get_by_identifier(&id)
         .ok_or_else(|| ApiError::NotFound(format!("Family '{}' not found", id)))?;
 
@@ -46,10 +50,6 @@ pub async fn get_family(
 
     Ok(Json(build_family(family, elements, relationships)))
 }
-
-// ============================================================================
-// Helper functions
-// ============================================================================
 
 fn build_family(family: &Element, elements: &[Element], relationships: &[Relationship]) -> Family {
     let requirements: Vec<Requirement> = get_family_requirements(family, elements, relationships);

@@ -1,17 +1,24 @@
 //! Summary endpoint handler
 
-use axum::{extract::State, Json};
+use axum::{extract::{Path, State}, Json};
 
 use crate::cmmc::model::{Document, ElementType};
 use crate::cmmc::response::DataSummary;
 use crate::cmmc::state::CmmcState;
+use crate::handler::error::ApiError;
 
-/// Get summary of the NIST 800-171 data - O(1) using pre-computed counts
-pub async fn get_summary(State(state): State<CmmcState>) -> Json<DataSummary> {
-    let data: &crate::cmmc::NistData = state.data();
-    let index: &crate::cmmc::SearchIndex = state.index();
+use super::query::parse_level;
 
-    let summary: DataSummary = DataSummary {
+/// Get summary of the dataset for a given CMMC level - O(1) using pre-computed counts
+pub async fn get_summary(
+    State(state): State<CmmcState>,
+    Path(level): Path<String>,
+) -> Result<Json<DataSummary>, ApiError> {
+    let level = parse_level(&level)?;
+    let data = state.data(level).ok_or_else(|| ApiError::NotFound(format!("Level {} not loaded", level)))?;
+    let index = state.index(level).unwrap();
+
+    let summary = DataSummary {
         document: data.response.elements.documents.first().cloned().unwrap_or_else(|| {
             Document {
                 doc_identifier: String::new(),
@@ -26,5 +33,5 @@ pub async fn get_summary(State(state): State<CmmcState>) -> Json<DataSummary> {
         relationship_count: data.response.elements.relationships.len(),
     };
 
-    Json(summary)
+    Ok(Json(summary))
 }

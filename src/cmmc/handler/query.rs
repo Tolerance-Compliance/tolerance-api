@@ -2,7 +2,15 @@
 
 use serde::Deserialize;
 
-use crate::cmmc::model::ElementType;
+use crate::cmmc::model::{CmmcLevel, ElementType};
+use crate::handler::error::ApiError;
+
+/// Parse a level string from a path parameter into a CmmcLevel
+pub fn parse_level(level: &str) -> Result<CmmcLevel, ApiError> {
+    level
+        .parse::<CmmcLevel>()
+        .map_err(|e| ApiError::BadRequest(e))
+}
 
 /// Query parameters for filtering elements with pagination
 #[derive(Debug, Deserialize)]
@@ -41,6 +49,13 @@ impl ElementQuery {
                 "security_requirement" => Some(ElementType::SecurityRequirement),
                 "discussion" => Some(ElementType::Discussion),
                 "assessment" => Some(ElementType::Assessment),
+                "adversary_effect" => Some(ElementType::AdversaryEffect),
+                "protection_strategy" => Some(ElementType::ProtectionStrategy),
+                "effect" => Some(ElementType::Effect),
+                "tactic" => Some(ElementType::Tactic),
+                "impact" => Some(ElementType::Impact),
+                "expected_result" => Some(ElementType::ExpectedResult),
+                "example" => Some(ElementType::Example),
                 _ => None,
             }
         })

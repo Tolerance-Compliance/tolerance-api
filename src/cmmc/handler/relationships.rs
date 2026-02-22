@@ -7,17 +7,19 @@ use axum::{
 
 use crate::cmmc::model::Relationship;
 use crate::cmmc::state::CmmcState;
+use crate::handler::error::ApiError;
+
+use super::query::parse_level;
 
 /// Get relationships for a specific element
-///
-/// Complexity: O(r) where r = relationship count
-/// TODO: Could be optimized with relationship index if needed
 pub async fn get_element_relationships(
     State(state): State<CmmcState>,
-    Path(id): Path<String>,
-) -> Json<Vec<Relationship>> {
-    let relationships: Vec<Relationship> = state
-        .data()
+    Path((level, id)): Path<(String, String)>,
+) -> Result<Json<Vec<Relationship>>, ApiError> {
+    let level = parse_level(&level)?;
+    let data = state.data(level).ok_or_else(|| ApiError::NotFound(format!("Level {} not loaded", level)))?;
+
+    let relationships: Vec<Relationship> = data
         .response
         .elements
         .relationships
@@ -26,10 +28,16 @@ pub async fn get_element_relationships(
         .cloned()
         .collect();
 
-    Json(relationships)
+    Ok(Json(relationships))
 }
 
 /// Get all relationships
-pub async fn get_relationships(State(state): State<CmmcState>) -> Json<Vec<Relationship>> {
-    Json(state.data().response.elements.relationships.clone())
+pub async fn get_relationships(
+    State(state): State<CmmcState>,
+    Path(level): Path<String>,
+) -> Result<Json<Vec<Relationship>>, ApiError> {
+    let level = parse_level(&level)?;
+    let data = state.data(level).ok_or_else(|| ApiError::NotFound(format!("Level {} not loaded", level)))?;
+
+    Ok(Json(data.response.elements.relationships.clone()))
 }

@@ -41,6 +41,42 @@ pub struct RelationshipType {
     pub description: String,
 }
 
+/// CMMC maturity level
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum CmmcLevel {
+    #[serde(rename = "l2")]
+    L2,
+    #[serde(rename = "l3")]
+    L3,
+}
+
+impl CmmcLevel {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            CmmcLevel::L2 => "l2",
+            CmmcLevel::L3 => "l3",
+        }
+    }
+}
+
+impl std::fmt::Display for CmmcLevel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl std::str::FromStr for CmmcLevel {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "l2" | "2" => Ok(CmmcLevel::L2),
+            "l3" | "3" => Ok(CmmcLevel::L3),
+            _ => Err(format!("Unknown CMMC level: '{}'. Use 'l2' or 'l3'.", s)),
+        }
+    }
+}
+
 /// Element types in the NIST data
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -50,6 +86,15 @@ pub enum ElementType {
     SecurityRequirement,
     Discussion,
     Assessment,
+    AdversaryEffect,
+    ProtectionStrategy,
+    Effect,
+    Tactic,
+    Impact,
+    ExpectedResult,
+    Example,
+    Sort,
+    ReferenceItem,
     #[serde(other)]
     Unknown,
 }

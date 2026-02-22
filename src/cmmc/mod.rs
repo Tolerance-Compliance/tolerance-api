@@ -18,6 +18,6 @@ pub mod handler;
 
 // Re-export commonly used types
 pub use state::CmmcState;
-pub use model::{NistData, Element, ElementType, Relationship};
+pub use model::{NistData, Element, ElementType, Relationship, CmmcLevel};
 pub use response::{Family, Requirement, SecurityRequirement, PaginatedResponse, DataSummary};
 pub use index::SearchIndex;
