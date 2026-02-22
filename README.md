@@ -4,17 +4,51 @@ REST API for querying **NIST SP 800-171 Rev 3** security requirements, built for
 
 The server loads the official NIST CPRT JSON export at startup, builds a search index for fast lookups, and exposes the data through a clean JSON API. All data is read-only and served from memory -- no database required.
 
+## Setup
+
+Runs via Docker — no local Rust toolchain required.
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- `make`
+
+### Commands
+
+#### `make build`
+
+Builds the Docker image and starts the container in the background. The API is available at [http://localhost:3000](http://localhost:3000).
+
+This compiles a release binary inside the container (`cargo build --release`) and runs it directly — no interpreter, no runtime overhead.
+
+Use this for the first run, or after pulling changes from main.
+
+#### `make rebuild`
+
+Stops any running instance, then builds and starts fresh. Use this after making code changes.
+
+#### `make stop`
+
+Stops and removes the container, kills anything on port 3000.
+
+#### `make logs`
+
+Tails the container's output. Shows startup logs and incoming request traces.
+
+### How it works
+
+The Dockerfile builds in two stages:
+
+1. **builder** — compiles the release binary using `rust:alpine`
+2. **runner** — copies the binary and NIST data file into a minimal Alpine image and runs it
+
+The same Dockerfile is used locally and in production (Fly.io).
+
+---
+
 ### NEEDED
 
 - The NIST data file (included): `cprt-sp_800_171_3_0_0-20260215-171034.json`
-
-### Run
-
-```bash
-cargo run
-```
-
-The server starts on `http://0.0.0.0:3000` by default.
 
 ### Configuration
 
