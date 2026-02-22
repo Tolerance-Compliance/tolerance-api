@@ -13,7 +13,7 @@ use tolerance_api::cmmc::CmmcState;
 use tolerance_api::routing::app;
 
 const DEFAULT_PORT: u16 = 3000;
-const DEFAULT_HOST: &str = "0.0.0.0";
+const DEFAULT_HOST: &str = "::";
 const NIST_DATA_PATH: &str = "cprt-sp_800_171_3_0_0-20260215-171034.json";
 
 #[tokio::main]
