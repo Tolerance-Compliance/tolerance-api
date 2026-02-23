@@ -35,13 +35,18 @@ pub struct DocumentInfo {
     get,
     path = "/v1/nist/documents",
     responses(
-        (status = 200, description = "List of available documents", body = Vec<DocumentInfo>)
+        (status = 200, description = "List of available documents.",
+         content(
+             (Vec<DocumentInfo> = "application/json"),
+             (String = "text/toon")
+         ))
     ),
     tag = "NIST"
 )]
 pub async fn get_documents(
     State(state): State<CmmcState>,
-) -> Json<Vec<DocumentInfo>> {
+    headers: HeaderMap,
+) -> FormatResponse<Vec<DocumentInfo>> {
     let mut docs: Vec<DocumentInfo> = state
         .available_documents()
         .into_iter()
@@ -54,7 +59,7 @@ pub async fn get_documents(
         .collect();
 
     docs.sort_by(|a, b| a.id.cmp(&b.id));
-    Json(docs)
+    FormatResponse::with_format(docs, wants_toon(&headers))
 }
 
 /// Get summary for a specific document+revision
@@ -67,7 +72,11 @@ pub async fn get_documents(
         ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)")
     ),
     responses(
-        (status = 200, description = "Summary retrieved successfully", body = DataSummary),
+        (status = 200, description = "Summary retrieved successfully.",
+         content(
+             (DataSummary = "application/json"),
+             (String = "text/toon")
+         )),
         (status = 404, description = "Document not found")
     ),
     tag = "NIST"
@@ -75,7 +84,8 @@ pub async fn get_documents(
 pub async fn get_summary(
     State(state): State<CmmcState>,
     Path((document, revision)): Path<(String, String)>,
-) -> Result<Json<DataSummary>, ApiError> {
+    headers: HeaderMap,
+) -> Result<FormatResponse<DataSummary>, ApiError> {
     let key = parse_document_key(&document, &revision)?;
     let data = state.data(key).ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
     let index = state.index(key).unwrap();
@@ -95,29 +105,9 @@ pub async fn get_summary(
         relationship_count: data.response.elements.relationships.len(),
     };
 
-    Ok(Json(summary))
+    Ok(FormatResponse::with_format(summary, wants_toon(&headers)))
 }
 
-/// Get all families
-///
-/// Returns a list of all NIST control families with their requirements.
-///
-/// # Content Negotiation
-///
-/// This endpoint supports content negotiation via the `Accept` header:
-///
-/// - `Accept: application/json` (default): Standard JSON response
-/// - `Accept: text/toon`: Token-Oriented Object Notation - a compact, LLM-friendly format
-///   that reduces token usage by 30-40%. Recommended when passing data to LLMs for
-///   compliance guidance.
-///
-/// ## TOON Format Example
-///
-/// ```text
-/// [2]{identifier,title,requirements}:
-///   AC,"Access Control",[3]{identifier,title,text}:...
-///   AU,"Audit and Accountability",[5]{identifier,title,text}:...
-/// ```
 #[utoipa::path(
     get,
     operation_id = "nist_get_families",
@@ -127,7 +117,11 @@ pub async fn get_summary(
         ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)")
     ),
     responses(
-        (status = 200, description = "List of families. Use `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).", body = Vec<Family>),
+        (status = 200, description = "List of families.",
+         content(
+             (Vec<Family> = "application/json"),
+             (String = "text/toon")
+         )),
         (status = 404, description = "Document not found")
     ),
     tag = "NIST"
@@ -162,7 +156,11 @@ pub async fn get_families(
         ("id" = String, Path, description = "Family identifier")
     ),
     responses(
-        (status = 200, description = "Family details. Use `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).", body = Family),
+        (status = 200, description = "Family details.",
+         content(
+             (Family = "application/json"),
+             (String = "text/toon")
+         )),
         (status = 404, description = "Family not found")
     ),
     tag = "NIST"
@@ -189,11 +187,6 @@ pub async fn get_family(
     Ok(FormatResponse::with_format(build_family(family, elements, relationships), wants_toon(&headers)))
 }
 
-/// Get all elements with optional filtering and pagination
-///
-/// # Content Negotiation
-///
-/// Use `Accept: text/toon` for LLM-optimized output.
 #[utoipa::path(
     get,
     operation_id = "nist_get_elements",
@@ -204,7 +197,11 @@ pub async fn get_family(
         ElementQuery
     ),
     responses(
-        (status = 200, description = "Paginated list of elements. Use `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).", body = PaginatedResponse<Element>),
+        (status = 200, description = "Paginated list of elements.",
+         content(
+             (PaginatedResponse<Element> = "application/json"),
+             (String = "text/toon")
+         )),
         (status = 404, description = "Document not found")
     ),
     tag = "NIST"
@@ -265,7 +262,11 @@ pub async fn get_elements(
         ("id" = String, Path, description = "Element identifier")
     ),
     responses(
-        (status = 200, description = "Element details. Use `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).", body = Element),
+        (status = 200, description = "Element details.",
+         content(
+             (Element = "application/json"),
+             (String = "text/toon")
+         )),
         (status = 404, description = "Element not found")
     ),
     tag = "NIST"
@@ -303,7 +304,11 @@ pub async fn get_element(
         ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)")
     ),
     responses(
-        (status = 200, description = "List of requirements. Use `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).", body = Vec<Requirement>),
+        (status = 200, description = "List of requirements.",
+         content(
+             (Vec<Requirement> = "application/json"),
+             (String = "text/toon")
+         )),
         (status = 404, description = "Document not found")
     ),
     tag = "NIST"
@@ -347,7 +352,11 @@ pub async fn get_requirements(
         ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)")
     ),
     responses(
-        (status = 200, description = "List of security requirements. Use `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).", body = Vec<SecurityRequirement>),
+        (status = 200, description = "List of security requirements.",
+         content(
+             (Vec<SecurityRequirement> = "application/json"),
+             (String = "text/toon")
+         )),
         (status = 404, description = "Document not found")
     ),
     tag = "NIST"
@@ -391,7 +400,11 @@ pub async fn get_security_requirements(
         ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)")
     ),
     responses(
-        (status = 200, description = "List of relationships. Use `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).", body = Vec<Relationship>),
+        (status = 200, description = "List of relationships.",
+         content(
+             (Vec<Relationship> = "application/json"),
+             (String = "text/toon")
+         )),
         (status = 404, description = "Document not found")
     ),
     tag = "NIST"
@@ -418,7 +431,11 @@ pub async fn get_relationships(
         ("id" = String, Path, description = "Element identifier")
     ),
     responses(
-        (status = 200, description = "Element relationships. Use `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).", body = Vec<Relationship>),
+        (status = 200, description = "Element relationships.",
+         content(
+             (Vec<Relationship> = "application/json"),
+             (String = "text/toon")
+         )),
         (status = 404, description = "Element not found")
     ),
     tag = "NIST"
@@ -448,8 +465,6 @@ pub async fn get_element_relationships(
 
     Ok(FormatResponse::with_format(relationships, wants_toon(&headers)))
 }
-
-// Helper functions
 
 fn build_family(family: &Element, elements: &[Element], relationships: &[Relationship]) -> Family {
     let requirements = get_family_requirements(family, elements, relationships);
