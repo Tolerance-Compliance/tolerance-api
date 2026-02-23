@@ -17,9 +17,9 @@ const DEFAULT_PORT: u16 = 3000;
 const DEFAULT_HOST: &str = "::";
 
 // Default data paths for available documents
-const NIST_SP800_171_R3_PATH: &str = "cprt-sp_800_171_3_0_0-20260215-171034.json";
-const NIST_SP800_171_R2_PATH: &str = "cprt-sp_800_171_2_0_0.json";
-const NIST_SP800_172_V1_PATH: &str = "cprt-sp_800_172_1_0_0.json";
+const NIST_SP800_171_R3_PATH: &str = "data/cprt-sp_800_171_3_0_0-20260215-171034.json";
+const NIST_SP800_171_R2_PATH: &str = "data/cprt-sp_800_171_2_0_0.json";
+const NIST_SP800_172_V1_PATH: &str = "data/cprt-sp_800_172_1_0_0.json";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
