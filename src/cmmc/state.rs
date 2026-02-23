@@ -1,8 +1,3 @@
-//! Application state for NIST data
-//!
-//! The state is built once at startup and shared across all requests via Arc.
-//! Supports multiple NIST documents and revisions (SP 800-171 Rev 1/2/3, SP 800-172 v1).
-
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -16,13 +11,13 @@ use super::model::{Document, Element, NistData, NistDocumentKey, Relationship};
 /// that come with them.
 pub struct DocumentContext<'a> {
     /// All elements in the document
-    pub elements: &'a [Element],
+    pub elements:      &'a [Element],
     /// All relationships in the document
     pub relationships: &'a [Relationship],
     /// Pre-built search index
-    pub index: &'a SearchIndex,
+    pub index:         &'a SearchIndex,
     /// Document metadata (name, version, website, etc.)
-    pub documents: &'a [Document],
+    pub documents:     &'a [Document],
 }
 
 /// Data and index for a single document+revision
