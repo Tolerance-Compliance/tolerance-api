@@ -380,7 +380,7 @@ pub async fn get_relationships(
     Ok(FormatResponse::with_format(doc.relationships.to_vec(), wants_toon(&headers)))
 }
 
-/// Get relationships for a specific element
+/// Get relationships for a specific element.
 #[utoipa::path(
     get,
     operation_id = "nist_get_element_relationships",
