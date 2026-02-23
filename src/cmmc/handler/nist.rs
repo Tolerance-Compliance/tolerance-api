@@ -1,4 +1,4 @@
-//! NIST API handlers — /v1/nist/:document/:revision/*
+//! /v1/nist/:document/:revision/*
 
 use axum::{
     extract::{Path, Query, State},
@@ -13,22 +13,19 @@ use crate::handler::error::ApiError;
 
 use super::query::{parse_document_key, ElementQuery};
 
-/// Document info for the discovery endpoint
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct DocumentInfo {
     /// URL path identifier (e.g., "sp800-171/r3")
-    pub id: String,
+    pub id:       String,
     /// Human-readable name
-    pub name: String,
+    pub name:     String,
     /// NIST document identifier
     pub document: String,
     /// Revision string
     pub revision: String,
 }
 
-// ── Handlers ────────────────────────────────────────────────────────────────
-
-/// Get list of available documents
+/// Get list of available documents.
 #[utoipa::path(
     get,
     path = "/v1/nist/documents",
@@ -60,7 +57,7 @@ pub async fn get_documents(
     FormatResponse::with_format(docs, wants_toon(&headers))
 }
 
-/// Get summary for a specific document+revision
+/// Get summary for a specific document+revision.
 #[utoipa::path(
     get,
     operation_id = "nist_get_summary",
@@ -104,10 +101,7 @@ pub async fn get_summary(
     Ok(FormatResponse::with_format(summary, wants_toon(&headers)))
 }
 
-/// Get all families
-///
-/// Returns a list of all NIST control families with their nested requirements.
-/// Send `Accept: text/toon` for a compact, LLM-friendly format (30-40% fewer tokens).
+/// Get all families.
 #[utoipa::path(
     get,
     operation_id = "nist_get_families",
@@ -145,7 +139,7 @@ pub async fn get_families(
     Ok(FormatResponse::with_format(families, wants_toon(&headers)))
 }
 
-/// Get a specific family by identifier
+/// Get a specific family by identifier.
 #[utoipa::path(
     get,
     operation_id = "nist_get_family",
@@ -186,7 +180,7 @@ pub async fn get_family(
     Ok(FormatResponse::with_format(build_family(family, doc.elements), wants_toon(&headers)))
 }
 
-/// Get all elements with optional filtering and pagination
+/// Get all elements.
 #[utoipa::path(
     get,
     operation_id = "nist_get_elements",
@@ -241,7 +235,7 @@ pub async fn get_elements(
     ))
 }
 
-/// Get a specific element by identifier
+/// Get a specific element by identifier.
 #[utoipa::path(
     get,
     operation_id = "nist_get_element",
@@ -279,7 +273,7 @@ pub async fn get_element(
     Ok(FormatResponse::with_format(element, wants_toon(&headers)))
 }
 
-/// Get all requirements across all families
+/// Get all requirements across all families.
 #[utoipa::path(
     get,
     operation_id = "nist_get_requirements",
@@ -317,7 +311,7 @@ pub async fn get_requirements(
     Ok(FormatResponse::with_format(requirements, wants_toon(&headers)))
 }
 
-/// Get all security requirements with discussion and assessment text
+/// Get all security requirements with discussion and assessment text.
 #[utoipa::path(
     get,
     operation_id = "nist_get_security_requirements",
@@ -355,7 +349,7 @@ pub async fn get_security_requirements(
     Ok(FormatResponse::with_format(security_requirements, wants_toon(&headers)))
 }
 
-/// Get all relationships
+/// Get all relationships.
 #[utoipa::path(
     get,
     operation_id = "nist_get_relationships",
@@ -428,8 +422,6 @@ pub async fn get_element_relationships(
     Ok(FormatResponse::with_format(relationships, wants_toon(&headers)))
 }
 
-// ── Builder helpers ──────────────────────────────────────────────────────────
-//
 // These are `pub(crate)` so the legacy CMMC handlers in families.rs can reuse
 // them without duplicating the logic.
 
