@@ -3,14 +3,36 @@ use axum::{
     Json,
 };
 
-use crate::cmmc::model::{Element, ElementType, Relationship};
+use crate::cmmc::model::{Element, ElementType, NistDocumentKey, Relationship};
 use crate::cmmc::response::{Family, Requirement, SecurityRequirement};
 use crate::cmmc::state::CmmcState;
 use crate::handler::error::ApiError;
 
-use super::query::parse_level;
+use super::query::{parse_document_key, parse_level};
 
-/// Get all families - uses type index for O(f) where f = family count
+/// Get all families - uses type index for O(f) where f = family count (new API)
+#[utoipa::path(
+    get,
+    path = "/v1/nist/{document}/{revision}/families",
+    params(
+        ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
+        ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)")
+    ),
+    responses(
+        (status = 200, description = "List of families", body = Vec<Family>),
+        (status = 404, description = "Document not found")
+    ),
+    tag = "NIST"
+)]
+pub async fn get_families(
+    State(state): State<CmmcState>,
+    Path((document, revision)): Path<(String, String)>,
+) -> Result<Json<Vec<Family>>, ApiError> {
+    let key = parse_document_key(&document, &revision)?;
+    get_families_impl(state, key)
+}
+
+/// Get all families - uses type index for O(f) where f = family count (legacy CMMC API)
 #[utoipa::path(
     get,
     path = "/api/v1/cmmc/{level}/families",
@@ -21,16 +43,26 @@ use super::query::parse_level;
         (status = 200, description = "List of families", body = Vec<Family>),
         (status = 404, description = "Level not found")
     ),
-    tag = "CMMC"
+    tag = "CMMC (Legacy)"
 )]
-pub async fn get_families(
+#[allow(deprecated)]
+pub async fn get_families_legacy(
     State(state): State<CmmcState>,
     Path(level): Path<String>,
 ) -> Result<Json<Vec<Family>>, ApiError> {
+    use crate::cmmc::model::{CmmcLevel, NistDocument, NistRevision};
     let level = parse_level(&level)?;
-    let elements = state.elements(level).ok_or_else(|| ApiError::NotFound(format!("Level {} not loaded", level)))?;
-    let relationships = &state.data(level).unwrap().response.elements.relationships;
-    let family_indices = state.index(level).unwrap().get_by_type(ElementType::Family);
+    let key = match level {
+        CmmcLevel::L2 => NistDocumentKey::new(NistDocument::Sp800171, NistRevision::Rev3),
+        CmmcLevel::L3 => NistDocumentKey::new(NistDocument::Sp800172, NistRevision::V1),
+    };
+    get_families_impl(state, key)
+}
+
+fn get_families_impl(state: CmmcState, key: NistDocumentKey) -> Result<Json<Vec<Family>>, ApiError> {
+    let elements = state.elements(key).ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
+    let relationships = &state.data(key).unwrap().response.elements.relationships;
+    let family_indices = state.index(key).unwrap().get_by_type(ElementType::Family);
 
     let families: Vec<Family> = family_indices
         .iter()
@@ -41,7 +73,30 @@ pub async fn get_families(
     Ok(Json(families))
 }
 
-/// Get a specific family by identifier - O(1) lookup
+/// Get a specific family by identifier
+#[utoipa::path(
+    get,
+    path = "/v1/nist/{document}/{revision}/families/{id}",
+    params(
+        ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
+        ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)"),
+        ("id" = String, Path, description = "Family identifier")
+    ),
+    responses(
+        (status = 200, description = "Family details", body = Family),
+        (status = 404, description = "Family not found")
+    ),
+    tag = "NIST"
+)]
+pub async fn get_family(
+    State(state): State<CmmcState>,
+    Path((document, revision, id)): Path<(String, String, String)>,
+) -> Result<Json<Family>, ApiError> {
+    let key = parse_document_key(&document, &revision)?;
+    get_family_impl(state, key, id)
+}
+
+/// Get a specific family by identifier - O(1) lookup (legacy CMMC API)
 #[utoipa::path(
     get,
     path = "/api/v1/cmmc/{level}/families/{id}",
@@ -53,16 +108,26 @@ pub async fn get_families(
         (status = 200, description = "Family details", body = Family),
         (status = 404, description = "Family not found")
     ),
-    tag = "CMMC"
+    tag = "CMMC (Legacy)"
 )]
-pub async fn get_family(
+#[allow(deprecated)]
+pub async fn get_family_legacy(
     State(state): State<CmmcState>,
     Path((level, id)): Path<(String, String)>,
 ) -> Result<Json<Family>, ApiError> {
+    use crate::cmmc::model::{CmmcLevel, NistDocument, NistRevision};
     let level = parse_level(&level)?;
-    let elements = state.elements(level).ok_or_else(|| ApiError::NotFound(format!("Level {} not loaded", level)))?;
-    let relationships = &state.data(level).unwrap().response.elements.relationships;
-    let index = state.index(level).unwrap();
+    let key = match level {
+        CmmcLevel::L2 => NistDocumentKey::new(NistDocument::Sp800171, NistRevision::Rev3),
+        CmmcLevel::L3 => NistDocumentKey::new(NistDocument::Sp800172, NistRevision::V1),
+    };
+    get_family_impl(state, key, id)
+}
+
+fn get_family_impl(state: CmmcState, key: NistDocumentKey, id: String) -> Result<Json<Family>, ApiError> {
+    let elements = state.elements(key).ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
+    let relationships = &state.data(key).unwrap().response.elements.relationships;
+    let index = state.index(key).unwrap();
 
     let idx: usize = index
         .get_by_identifier(&id)

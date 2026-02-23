@@ -2,24 +2,36 @@ pub const                         VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const                    SERVICE_NAME: &str = env!("CARGO_PKG_NAME");
 pub const                 HEALTH_ENDPOINT: &str = "/health";
 
-// CMMC endpoints with :level parameter (l2 = SP 800-171, l3 = SP 800-172)
-pub const          CMMC_SUMMARY_ENDPOINT: &str = "/api/v1/cmmc/:level/summary";
-pub const         CMMC_FAMILIES_ENDPOINT: &str = "/api/v1/cmmc/:level/families";
-pub const           CMMC_FAMILY_ENDPOINT: &str = "/api/v1/cmmc/:level/families/:id";
-pub const         CMMC_ELEMENTS_ENDPOINT: &str = "/api/v1/cmmc/:level/elements";
-pub const          CMMC_ELEMENT_ENDPOINT: &str = "/api/v1/cmmc/:level/elements/:id";
-pub const     CMMC_REQUIREMENTS_ENDPOINT: &str = "/api/v1/cmmc/:level/requirements";
-pub const CMMC_SECURITY_REQS_ENDPOINT: &str = "/api/v1/cmmc/:level/security-requirements";
-pub const    CMMC_RELATIONSHIPS_ENDPOINT: &str = "/api/v1/cmmc/:level/relationships";
-pub const CMMC_ELEMENT_RELATIONS_ENDPOINT: &str = "/api/v1/cmmc/:level/elements/:id/relationships";
+// New NIST API endpoints with :document and :revision parameters (recommended)
+pub const          NIST_DOCUMENTS_ENDPOINT: &str = "/v1/nist/documents";
+pub const            NIST_SUMMARY_ENDPOINT: &str = "/v1/nist/:document/:revision/summary";
+pub const           NIST_FAMILIES_ENDPOINT: &str = "/v1/nist/:document/:revision/families";
+pub const             NIST_FAMILY_ENDPOINT: &str = "/v1/nist/:document/:revision/families/:id";
+pub const           NIST_ELEMENTS_ENDPOINT: &str = "/v1/nist/:document/:revision/elements";
+pub const            NIST_ELEMENT_ENDPOINT: &str = "/v1/nist/:document/:revision/elements/:id";
+pub const       NIST_REQUIREMENTS_ENDPOINT: &str = "/v1/nist/:document/:revision/requirements";
+pub const      NIST_SECURITY_REQS_ENDPOINT: &str = "/v1/nist/:document/:revision/security-requirements";
+pub const      NIST_RELATIONSHIPS_ENDPOINT: &str = "/v1/nist/:document/:revision/relationships";
+pub const  NIST_ELEMENT_RELATIONS_ENDPOINT: &str = "/v1/nist/:document/:revision/elements/:id/relationships";
+
+// Legacy CMMC endpoints with :level parameter (l2 = SP 800-171, l3 = SP 800-172)
+pub const            CMMC_SUMMARY_ENDPOINT: &str = "/api/v1/cmmc/:level/summary";
+pub const           CMMC_FAMILIES_ENDPOINT: &str = "/api/v1/cmmc/:level/families";
+pub const             CMMC_FAMILY_ENDPOINT: &str = "/api/v1/cmmc/:level/families/:id";
+pub const           CMMC_ELEMENTS_ENDPOINT: &str = "/api/v1/cmmc/:level/elements";
+pub const            CMMC_ELEMENT_ENDPOINT: &str = "/api/v1/cmmc/:level/elements/:id";
+pub const       CMMC_REQUIREMENTS_ENDPOINT: &str = "/api/v1/cmmc/:level/requirements";
+pub const      CMMC_SECURITY_REQS_ENDPOINT: &str = "/api/v1/cmmc/:level/security-requirements";
+pub const      CMMC_RELATIONSHIPS_ENDPOINT: &str = "/api/v1/cmmc/:level/relationships";
+pub const  CMMC_ELEMENT_RELATIONS_ENDPOINT: &str = "/api/v1/cmmc/:level/elements/:id/relationships";
 
 // Documentation cache durations
-pub const       FAVICON_CACHE_DURATION:  u32 = 86400;   // 1 day
-pub const       OPENAPI_CACHE_DURATION:  u32 = 300;     // 5 minutes
-pub const    SWAGGER_UI_CACHE_DURATION:  u32 = 300;     // 5 minutes
+pub const           FAVICON_CACHE_DURATION:  u32 = 86400;   // 1 day
+pub const           OPENAPI_CACHE_DURATION:  u32 = 300;     // 5 minutes
+pub const        SWAGGER_UI_CACHE_DURATION:  u32 = 300;     // 5 minutes
 
 // Swagger UI HTML
-pub const              SWAGGER_UI_HTML: &str = r#"<!DOCTYPE html>
+pub const                  SWAGGER_UI_HTML: &str = r#"<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />

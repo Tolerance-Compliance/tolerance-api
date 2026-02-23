@@ -2,10 +2,90 @@
 
 use serde::Deserialize;
 
-use crate::cmmc::model::{CmmcLevel, ElementType};
+use crate::cmmc::model::{CmmcLevel, ElementType, NistDocument, NistDocumentKey, NistRevision};
 use crate::handler::error::ApiError;
 
-/// Parse a level string from a path parameter into a CmmcLevel
+/// Query parameter for output format
+///
+/// Supports two formats:
+/// - `json` (default): Standard JSON response
+/// - `toon`: Token-Oriented Object Notation for LLM optimization
+///
+/// # TOON Format
+///
+/// TOON is a compact, human-readable format designed for LLM consumption:
+/// - 30-40% token reduction compared to JSON
+/// - Tabular arrays with explicit lengths: `[N]{fields}:`
+/// - Indentation-based objects (similar to YAML)
+/// - Smart quoting (only when necessary)
+///
+/// Recommended when passing API responses to LLMs for compliance guidance.
+///
+/// # Examples
+///
+/// JSON: `?format=json` or omit parameter
+/// TOON: `?format=toon`
+#[derive(Debug, Deserialize, utoipa::IntoParams)]
+#[into_params(parameter_in = Query)]
+pub struct FormatQuery {
+    /// Output format: 'json' (default) or 'toon'.
+    ///
+    /// TOON format is optimized for LLM consumption with 30-40% token reduction.
+    /// Use TOON when passing responses to language models for compliance guidance.
+    ///
+    /// Example: `?format=toon`
+    #[param(example = "json")]
+    pub format: Option<String>,
+}
+
+impl FormatQuery {
+    /// Check if TOON format is requested via query parameter
+    pub fn is_toon(&self) -> bool {
+        self.format.as_ref().map(|f| f.eq_ignore_ascii_case("toon")).unwrap_or(false)
+    }
+
+    /// Check if TOON format is requested via query parameter or Accept header
+    pub fn is_toon_with_headers(&self, headers: &axum::http::HeaderMap) -> bool {
+        // First check query parameter
+        if self.is_toon() {
+            return true;
+        }
+
+        // Then check Accept header
+        if let Some(accept) = headers.get(axum::http::header::ACCEPT) {
+            if let Ok(accept_str) = accept.to_str() {
+                // Check if Accept header contains text/toon
+                return accept_str.contains("text/toon");
+            }
+        }
+
+        false
+    }
+}
+
+/// Parse a document string from a path parameter into a NistDocument
+pub fn parse_document(document: &str) -> Result<NistDocument, ApiError> {
+    document
+        .parse::<NistDocument>()
+        .map_err(|e| ApiError::BadRequest(e))
+}
+
+/// Parse a revision string from a path parameter into a NistRevision
+pub fn parse_revision(revision: &str) -> Result<NistRevision, ApiError> {
+    revision
+        .parse::<NistRevision>()
+        .map_err(|e| ApiError::BadRequest(e))
+}
+
+/// Parse document and revision strings into a NistDocumentKey
+pub fn parse_document_key(document: &str, revision: &str) -> Result<NistDocumentKey, ApiError> {
+    let doc = parse_document(document)?;
+    let rev = parse_revision(revision)?;
+    Ok(NistDocumentKey::new(doc, rev))
+}
+
+/// Parse a level string from a path parameter into a CmmcLevel (deprecated)
+#[allow(deprecated)]
 pub fn parse_level(level: &str) -> Result<CmmcLevel, ApiError> {
     level
         .parse::<CmmcLevel>()
@@ -24,6 +104,8 @@ pub struct ElementQuery {
     pub limit: Option<usize>,
     /// Offset for pagination (default: 0)
     pub offset: Option<usize>,
+    /// Output format (json or toon, default: json)
+    pub format: Option<String>,
 }
 
 impl ElementQuery {
@@ -59,5 +141,10 @@ impl ElementQuery {
                 _ => None,
             }
         })
+    }
+
+    /// Check if TOON format is requested
+    pub fn is_toon(&self) -> bool {
+        self.format.as_ref().map(|f| f.eq_ignore_ascii_case("toon")).unwrap_or(false)
     }
 }

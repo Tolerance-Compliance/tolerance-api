@@ -1,6 +1,7 @@
 //! Tolerance API Server
 //!
-//! REST API for NIST SP 800-171 (CMMC L2) and SP 800-172 (CMMC L3) security requirements.
+//! REST API for NIST SP 800-171 and SP 800-172 security requirements.
+//! Supports multiple document revisions.
 
 use std::error::Error;
 use std::net::SocketAddr;
@@ -9,13 +10,15 @@ use tokio::net::TcpListener;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use tolerance_api::cmmc::{CmmcLevel, CmmcState};
+use tolerance_api::cmmc::{CmmcState, NistDocument, NistDocumentKey, NistRevision};
 use tolerance_api::routing::app;
 
 const DEFAULT_PORT: u16 = 3000;
 const DEFAULT_HOST: &str = "::";
-const NIST_L2_DATA_PATH: &str = "cprt-sp_800_171_3_0_0-20260215-171034.json";
-const NIST_L3_DATA_PATH: &str = "cprt-sp_800_172_1_0_0.json";
+
+// Default data paths for available documents
+const NIST_SP800_171_R3_PATH: &str = "cprt-sp_800_171_3_0_0-20260215-171034.json";
+const NIST_SP800_172_V1_PATH: &str = "cprt-sp_800_172_1_0_0.json";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -37,20 +40,72 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let mut datasets = Vec::new();
 
-    let l2_path = std::env::var("NIST_L2_DATA_PATH").unwrap_or_else(|_| NIST_L2_DATA_PATH.to_string());
-    info!("Loading CMMC L2 (SP 800-171) data from: {}", l2_path);
-    let l2_data = CmmcState::load_json(&l2_path)?;
-    datasets.push((CmmcLevel::L2, l2_data));
-    info!("CMMC L2 data loaded");
+    // Load SP 800-171 Rev 3 (default)
+    let sp171r3_key = NistDocumentKey::new(NistDocument::Sp800171, NistRevision::Rev3);
+    let sp171r3_path = std::env::var("NIST_SP800_171_R3_PATH")
+        .unwrap_or_else(|_| NIST_SP800_171_R3_PATH.to_string());
+    info!("Loading {} from: {}", sp171r3_key.display_name(), sp171r3_path);
+    match CmmcState::load_json(&sp171r3_path) {
+        Ok(data) => {
+            datasets.push((sp171r3_key, data));
+            info!("{} loaded successfully", sp171r3_key.display_name());
+        }
+        Err(e) => {
+            tracing::warn!("Failed to load {}: {}", sp171r3_key.display_name(), e);
+        }
+    }
 
-    let l3_path = std::env::var("NIST_L3_DATA_PATH").unwrap_or_else(|_| NIST_L3_DATA_PATH.to_string());
-    info!("Loading CMMC L3 (SP 800-172) data from: {}", l3_path);
-    let l3_data = CmmcState::load_json(&l3_path)?;
-    datasets.push((CmmcLevel::L3, l3_data));
-    info!("CMMC L3 data loaded");
+    // Load SP 800-172 v1.0 (default)
+    let sp172v1_key = NistDocumentKey::new(NistDocument::Sp800172, NistRevision::V1);
+    let sp172v1_path = std::env::var("NIST_SP800_172_V1_PATH")
+        .unwrap_or_else(|_| NIST_SP800_172_V1_PATH.to_string());
+    info!("Loading {} from: {}", sp172v1_key.display_name(), sp172v1_path);
+    match CmmcState::load_json(&sp172v1_path) {
+        Ok(data) => {
+            datasets.push((sp172v1_key, data));
+            info!("{} loaded successfully", sp172v1_key.display_name());
+        }
+        Err(e) => {
+            tracing::warn!("Failed to load {}: {}", sp172v1_key.display_name(), e);
+        }
+    }
+
+    // Optional: Load SP 800-171 Rev 2 if path provided
+    if let Ok(sp171r2_path) = std::env::var("NIST_SP800_171_R2_PATH") {
+        let sp171r2_key = NistDocumentKey::new(NistDocument::Sp800171, NistRevision::Rev2);
+        info!("Loading {} from: {}", sp171r2_key.display_name(), sp171r2_path);
+        match CmmcState::load_json(&sp171r2_path) {
+            Ok(data) => {
+                datasets.push((sp171r2_key, data));
+                info!("{} loaded successfully", sp171r2_key.display_name());
+            }
+            Err(e) => {
+                tracing::warn!("Failed to load {}: {}", sp171r2_key.display_name(), e);
+            }
+        }
+    }
+
+    // Optional: Load SP 800-171 Rev 1 if path provided
+    if let Ok(sp171r1_path) = std::env::var("NIST_SP800_171_R1_PATH") {
+        let sp171r1_key = NistDocumentKey::new(NistDocument::Sp800171, NistRevision::Rev1);
+        info!("Loading {} from: {}", sp171r1_key.display_name(), sp171r1_path);
+        match CmmcState::load_json(&sp171r1_path) {
+            Ok(data) => {
+                datasets.push((sp171r1_key, data));
+                info!("{} loaded successfully", sp171r1_key.display_name());
+            }
+            Err(e) => {
+                tracing::warn!("Failed to load {}: {}", sp171r1_key.display_name(), e);
+            }
+        }
+    }
+
+    if datasets.is_empty() {
+        return Err("No NIST documents loaded successfully. Check file paths.".into());
+    }
 
     let state = CmmcState::new(datasets);
-    info!("All CMMC datasets indexed");
+    info!("All NIST documents indexed ({} documents loaded)", state.available_documents().len());
 
     let app: axum::Router = app(state);
 
@@ -64,6 +119,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let listener: TcpListener = TcpListener::bind(&addr).await?;
 
     info!("Server listening on http://{}", addr);
+    info!("API documentation available at http://{}/", addr);
+    info!("Available documents at http://{}/api/v1/nist/documents", addr);
 
     axum::serve(
         listener,
