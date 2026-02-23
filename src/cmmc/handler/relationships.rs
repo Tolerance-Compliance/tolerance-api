@@ -14,6 +14,7 @@ use super::query::parse_level;
 /// Get relationships for a specific element (legacy CMMC API)
 #[utoipa::path(
     get,
+    operation_id = "cmmc_get_element_relationships",
     path = "/api/v1/cmmc/{level}/elements/{id}/relationships",
     params(
         ("level" = String, Path, description = "CMMC level (l2 for SP 800-171, l3 for SP 800-172)"),
@@ -53,6 +54,7 @@ pub async fn get_element_relationships(
 /// Get all relationships (legacy CMMC API)
 #[utoipa::path(
     get,
+    operation_id = "cmmc_get_relationships",
     path = "/api/v1/cmmc/{level}/relationships",
     params(
         ("level" = String, Path, description = "CMMC level (l2 for SP 800-171, l3 for SP 800-172)")

@@ -30,7 +30,7 @@ pub use nist::{
 
 // Legacy CMMC API handlers (deprecated)
 pub use summary::get_summary;
-pub use families::{get_families, get_family};
+pub use families::{get_families, get_family, get_families_legacy, get_family_legacy};
 pub use elements::{get_elements, get_element, get_requirements, get_security_requirements};
 pub use relationships::{get_relationships, get_element_relationships};
 pub use query::ElementQuery;

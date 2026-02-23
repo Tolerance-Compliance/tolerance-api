@@ -15,7 +15,7 @@ pub enum ErrorHandler {
     Conflict(String),
     #[error("Invalid request: {0}")]
     InvalidRequest(String),
-    #[error("Hehehe: {0}")]
+    #[error("I'm a teapot: {0}")]
     ImATeapot(String),
     #[error("Database error: {0}")]
     Database(#[from] sqlx::Error),

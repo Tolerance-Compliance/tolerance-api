@@ -1,4 +1,4 @@
-//! New NIST API handlers using /api/v1/nist/:document/:revision structure
+//! New NIST API handlers using /v1/nist/:document/:revision structure
 //!
 //! These handlers replace the legacy CMMC level-based API with a more flexible
 //! document+revision structure that supports multiple revisions.
@@ -12,7 +12,7 @@ use axum::{
 use crate::cmmc::model::{Document, Element, ElementType, Relationship};
 use crate::cmmc::response::{DataSummary, Family, PaginatedResponse, Requirement, SecurityRequirement};
 use crate::cmmc::state::CmmcState;
-use crate::cmmc::format_response::FormatResponse;
+use crate::cmmc::format_response::{FormatResponse, wants_toon};
 use crate::handler::error::ApiError;
 
 use super::query::{parse_document_key, ElementQuery};
@@ -60,6 +60,7 @@ pub async fn get_documents(
 /// Get summary for a specific document+revision
 #[utoipa::path(
     get,
+    operation_id = "nist_get_summary",
     path = "/v1/nist/{document}/{revision}/summary",
     params(
         ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
@@ -119,13 +120,14 @@ pub async fn get_summary(
 /// ```
 #[utoipa::path(
     get,
+    operation_id = "nist_get_families",
     path = "/v1/nist/{document}/{revision}/families",
     params(
         ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
         ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)")
     ),
     responses(
-        (status = 200, description = "Success. Returns application/json by default, or text/toon if requested via Accept header", body = Vec<Family>),
+        (status = 200, description = "List of families. Use `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).", body = Vec<Family>),
         (status = 404, description = "Document not found")
     ),
     tag = "NIST"
@@ -146,28 +148,21 @@ pub async fn get_families(
         .map(|family: &Element| build_family(family, elements, relationships))
         .collect();
 
-    // Check Accept header for TOON format
-    let use_toon = headers
-        .get(axum::http::header::ACCEPT)
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.contains("text/toon"))
-        .unwrap_or(false);
-
-    Ok(FormatResponse::with_format(families, use_toon))
+    Ok(FormatResponse::with_format(families, wants_toon(&headers)))
 }
 
 /// Get a specific family by identifier
 #[utoipa::path(
     get,
+    operation_id = "nist_get_family",
     path = "/v1/nist/{document}/{revision}/families/{id}",
     params(
         ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
         ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)"),
-        ("id" = String, Path, description = "Family identifier"),
-        ("format" = Option<String>, Query, description = "Output format: json (default) or toon")
+        ("id" = String, Path, description = "Family identifier")
     ),
     responses(
-        (status = 200, description = "Family details", body = Family),
+        (status = 200, description = "Family details. Use `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).", body = Family),
         (status = 404, description = "Family not found")
     ),
     tag = "NIST"
@@ -191,13 +186,7 @@ pub async fn get_family(
         .filter(|e: &&Element| e.element_type == ElementType::Family)
         .ok_or_else(|| ApiError::NotFound(format!("Family '{}' not found", id)))?;
 
-    let use_toon = headers
-        .get(axum::http::header::ACCEPT)
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.contains("text/toon"))
-        .unwrap_or(false);
-
-    Ok(FormatResponse::with_format(build_family(family, elements, relationships), use_toon))
+    Ok(FormatResponse::with_format(build_family(family, elements, relationships), wants_toon(&headers)))
 }
 
 /// Get all elements with optional filtering and pagination
@@ -207,6 +196,7 @@ pub async fn get_family(
 /// Use `Accept: text/toon` for LLM-optimized output.
 #[utoipa::path(
     get,
+    operation_id = "nist_get_elements",
     path = "/v1/nist/{document}/{revision}/elements",
     params(
         ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
@@ -214,7 +204,7 @@ pub async fn get_family(
         ElementQuery
     ),
     responses(
-        (status = 200, description = "Paginated list of elements. Supports Accept: application/json (default) or Accept: text/toon", body = PaginatedResponse<Element>),
+        (status = 200, description = "Paginated list of elements. Use `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).", body = PaginatedResponse<Element>),
         (status = 404, description = "Document not found")
     ),
     tag = "NIST"
@@ -252,12 +242,6 @@ pub async fn get_elements(
 
     let has_more = offset + limit < total;
 
-    let use_toon = headers
-        .get(axum::http::header::ACCEPT)
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.contains("text/toon"))
-        .unwrap_or(false);
-
     Ok(FormatResponse::with_format(
         PaginatedResponse {
             data: items,
@@ -266,13 +250,14 @@ pub async fn get_elements(
             limit,
             has_more,
         },
-        use_toon,
+        wants_toon(&headers),
     ))
 }
 
 /// Get a specific element by identifier
 #[utoipa::path(
     get,
+    operation_id = "nist_get_element",
     path = "/v1/nist/{document}/{revision}/elements/{id}",
     params(
         ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
@@ -280,7 +265,7 @@ pub async fn get_elements(
         ("id" = String, Path, description = "Element identifier")
     ),
     responses(
-        (status = 200, description = "Element details", body = Element),
+        (status = 200, description = "Element details. Use `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).", body = Element),
         (status = 404, description = "Element not found")
     ),
     tag = "NIST"
@@ -303,29 +288,22 @@ pub async fn get_element(
         .cloned()
         .ok_or_else(|| ApiError::NotFound(format!("Element '{}' not found", id)))?;
 
-    let use_toon = headers
-        .get(axum::http::header::ACCEPT)
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.contains("text/toon"))
-        .unwrap_or(false);
-
-    Ok(FormatResponse::with_format(element, use_toon))
+    Ok(FormatResponse::with_format(element, wants_toon(&headers)))
 }
 
 /// Get all requirements
 ///
-/// Returns all requirements across all families. Use the `format` query parameter
-/// to get TOON format for LLM consumption (30-40% token reduction).
+/// Returns all requirements across all families.
 #[utoipa::path(
     get,
+    operation_id = "nist_get_requirements",
     path = "/v1/nist/{document}/{revision}/requirements",
     params(
         ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
-        ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)"),
-        ("format" = Option<String>, Query, description = "Output format: 'json' (default) or 'toon'. TOON optimized for LLM consumption.")
+        ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)")
     ),
     responses(
-        (status = 200, description = "List of requirements", body = Vec<Requirement>),
+        (status = 200, description = "List of requirements. Use `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).", body = Vec<Requirement>),
         (status = 404, description = "Document not found")
     ),
     tag = "NIST"
@@ -354,29 +332,22 @@ pub async fn get_requirements(
         })
         .collect();
 
-    let use_toon = headers
-        .get(axum::http::header::ACCEPT)
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.contains("text/toon"))
-        .unwrap_or(false);
-
-    Ok(FormatResponse::with_format(requirements, use_toon))
+    Ok(FormatResponse::with_format(requirements, wants_toon(&headers)))
 }
 
 /// Get all security requirements
 ///
 /// Returns all security requirements with discussion and assessment text.
-/// Use TOON format (`?format=toon`) for LLM-optimized output.
 #[utoipa::path(
     get,
+    operation_id = "nist_get_security_requirements",
     path = "/v1/nist/{document}/{revision}/security-requirements",
     params(
         ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
-        ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)"),
-        ("format" = Option<String>, Query, description = "Output format: 'json' (default) or 'toon'. TOON optimized for LLM consumption.")
+        ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)")
     ),
     responses(
-        (status = 200, description = "List of security requirements", body = Vec<SecurityRequirement>),
+        (status = 200, description = "List of security requirements. Use `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).", body = Vec<SecurityRequirement>),
         (status = 404, description = "Document not found")
     ),
     tag = "NIST"
@@ -407,25 +378,20 @@ pub async fn get_security_requirements(
         })
         .collect();
 
-    let use_toon = headers
-        .get(axum::http::header::ACCEPT)
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.contains("text/toon"))
-        .unwrap_or(false);
-
-    Ok(FormatResponse::with_format(security_requirements, use_toon))
+    Ok(FormatResponse::with_format(security_requirements, wants_toon(&headers)))
 }
 
 /// Get all relationships
 #[utoipa::path(
     get,
+    operation_id = "nist_get_relationships",
     path = "/v1/nist/{document}/{revision}/relationships",
     params(
         ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
         ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)")
     ),
     responses(
-        (status = 200, description = "List of relationships", body = Vec<Relationship>),
+        (status = 200, description = "List of relationships. Use `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).", body = Vec<Relationship>),
         (status = 404, description = "Document not found")
     ),
     tag = "NIST"
@@ -438,18 +404,13 @@ pub async fn get_relationships(
     let key = parse_document_key(&document, &revision)?;
     let data = state.data(key).ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let use_toon = headers
-        .get(axum::http::header::ACCEPT)
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.contains("text/toon"))
-        .unwrap_or(false);
-
-    Ok(FormatResponse::with_format(data.response.elements.relationships.clone(), use_toon))
+    Ok(FormatResponse::with_format(data.response.elements.relationships.clone(), wants_toon(&headers)))
 }
 
 /// Get relationships for a specific element
 #[utoipa::path(
     get,
+    operation_id = "nist_get_element_relationships",
     path = "/v1/nist/{document}/{revision}/elements/{id}/relationships",
     params(
         ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
@@ -457,7 +418,7 @@ pub async fn get_relationships(
         ("id" = String, Path, description = "Element identifier")
     ),
     responses(
-        (status = 200, description = "Element relationships", body = Vec<Relationship>),
+        (status = 200, description = "Element relationships. Use `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).", body = Vec<Relationship>),
         (status = 404, description = "Element not found")
     ),
     tag = "NIST"
@@ -485,13 +446,7 @@ pub async fn get_element_relationships(
         .cloned()
         .collect();
 
-    let use_toon = headers
-        .get(axum::http::header::ACCEPT)
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.contains("text/toon"))
-        .unwrap_or(false);
-
-    Ok(FormatResponse::with_format(relationships, use_toon))
+    Ok(FormatResponse::with_format(relationships, wants_toon(&headers)))
 }
 
 // Helper functions
@@ -567,7 +522,7 @@ fn find_related_text(
 ) -> Option<String> {
     elements
         .iter()
-        .find(|e| e.element_type == element_type && e.element_identifier.contains(sr_identifier))
+        .find(|e| e.element_type == element_type && e.element_identifier == sr_identifier)
         .map(|e| e.text.clone())
         .filter(|t| !t.is_empty())
 }

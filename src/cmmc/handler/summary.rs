@@ -12,6 +12,7 @@ use super::query::parse_level;
 /// Get a summary of the dataset for a given CMMC level - O(1) using pre-computed counts (legacy API)
 #[utoipa::path(
     get,
+    operation_id = "cmmc_get_summary",
     path = "/api/v1/cmmc/{level}/summary",
     params(
         ("level" = String, Path, description = "CMMC level (l2 for SP 800-171, l3 for SP 800-172)")

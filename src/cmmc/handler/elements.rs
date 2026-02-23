@@ -15,6 +15,7 @@ use super::query::{parse_level, ElementQuery};
 /// Get all elements with optional filtering and pagination (legacy CMMC API)
 #[utoipa::path(
     get,
+    operation_id = "cmmc_get_elements",
     path = "/api/v1/cmmc/{level}/elements",
     params(
         ("level" = String, Path, description = "CMMC level (l2 for SP 800-171, l3 for SP 800-172)"),
@@ -74,6 +75,7 @@ pub async fn get_elements(
 /// Get a specific element by identifier - O(1) lookup (legacy CMMC API)
 #[utoipa::path(
     get,
+    operation_id = "cmmc_get_element",
     path = "/api/v1/cmmc/{level}/elements/{id}",
     params(
         ("level" = String, Path, description = "CMMC level (l2 for SP 800-171, l3 for SP 800-172)"),
@@ -112,6 +114,7 @@ pub async fn get_element(
 /// Get all requirements (legacy CMMC API)
 #[utoipa::path(
     get,
+    operation_id = "cmmc_get_requirements",
     path = "/api/v1/cmmc/{level}/requirements",
     params(
         ("level" = String, Path, description = "CMMC level (l2 for SP 800-171, l3 for SP 800-172)")
@@ -148,6 +151,7 @@ pub async fn get_requirements(
 /// Get all security requirements (legacy CMMC API)
 #[utoipa::path(
     get,
+    operation_id = "cmmc_get_security_requirements",
     path = "/api/v1/cmmc/{level}/security-requirements",
     params(
         ("level" = String, Path, description = "CMMC level (l2 for SP 800-171, l3 for SP 800-172)")

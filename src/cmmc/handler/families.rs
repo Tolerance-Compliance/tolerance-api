@@ -35,6 +35,7 @@ pub async fn get_families(
 /// Get all families - uses type index for O(f) where f = family count (legacy CMMC API)
 #[utoipa::path(
     get,
+    operation_id = "cmmc_get_families",
     path = "/api/v1/cmmc/{level}/families",
     params(
         ("level" = String, Path, description = "CMMC level (l2 for SP 800-171, l3 for SP 800-172)")
@@ -99,6 +100,7 @@ pub async fn get_family(
 /// Get a specific family by identifier - O(1) lookup (legacy CMMC API)
 #[utoipa::path(
     get,
+    operation_id = "cmmc_get_family",
     path = "/api/v1/cmmc/{level}/families/{id}",
     params(
         ("level" = String, Path, description = "CMMC level (l2 for SP 800-171, l3 for SP 800-172)"),
@@ -215,7 +217,7 @@ fn find_related_text(
 ) -> Option<String> {
     elements
         .iter()
-        .find(|e: &&Element| e.element_type == element_type && e.element_identifier.contains(sr_identifier))
+        .find(|e: &&Element| e.element_type == element_type && e.element_identifier == sr_identifier)
         .map(|e: &Element| e.text.clone())
         .filter(|t: &String| !t.is_empty())
 }

@@ -26,8 +26,8 @@ use crate::constant::OPENAPI_CACHE_DURATION;
         crate::cmmc::handler::nist::get_element_relationships,
         // Legacy CMMC API endpoints
         crate::cmmc::handler::summary::get_summary,
-        crate::cmmc::handler::families::get_families,
-        crate::cmmc::handler::families::get_family,
+        crate::cmmc::handler::families::get_families_legacy,
+        crate::cmmc::handler::families::get_family_legacy,
         crate::cmmc::handler::elements::get_elements,
         crate::cmmc::handler::elements::get_element,
         crate::cmmc::handler::elements::get_requirements,

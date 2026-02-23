@@ -8,6 +8,15 @@ use serde::Serialize;
 
 use super::toon;
 
+/// Returns `true` when the client signals it accepts `text/toon` via the `Accept` header.
+pub fn wants_toon(headers: &axum::http::HeaderMap) -> bool {
+    headers
+        .get(header::ACCEPT)
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.contains("text/toon"))
+        .unwrap_or(false)
+}
+
 /// A response that can be serialized to either JSON or TOON format
 pub struct FormatResponse<T> {
     data: T,

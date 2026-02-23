@@ -10,7 +10,7 @@ use crate::cmmc::handler::{
     get_nist_families, get_nist_family, get_nist_relationships, get_nist_requirements,
     get_nist_security_requirements, get_nist_summary,
     // Legacy CMMC API handlers
-    get_element, get_element_relationships, get_elements, get_families, get_family,
+    get_element, get_element_relationships, get_elements, get_families_legacy, get_family_legacy,
     get_relationships, get_requirements, get_security_requirements, get_summary,
 };
 use crate::cmmc::CmmcState;
@@ -60,8 +60,8 @@ pub fn app(state: CmmcState) -> Router {
         .route(NIST_ELEMENT_RELATIONS_ENDPOINT, get(get_nist_element_relationships))
         // Legacy CMMC API endpoints (deprecated but maintained for backward compatibility)
         .route(CMMC_SUMMARY_ENDPOINT,           get(get_summary))
-        .route(CMMC_FAMILIES_ENDPOINT,          get(get_families))
-        .route(CMMC_FAMILY_ENDPOINT,            get(get_family))
+        .route(CMMC_FAMILIES_ENDPOINT,          get(get_families_legacy))
+        .route(CMMC_FAMILY_ENDPOINT,            get(get_family_legacy))
         .route(CMMC_ELEMENTS_ENDPOINT,          get(get_elements))
         .route(CMMC_ELEMENT_ENDPOINT,           get(get_element))
         .route(CMMC_REQUIREMENTS_ENDPOINT,      get(get_requirements))
