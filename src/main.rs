@@ -18,6 +18,7 @@ const DEFAULT_HOST: &str = "::";
 
 // Default data paths for available documents
 const NIST_SP800_171_R3_PATH: &str = "cprt-sp_800_171_3_0_0-20260215-171034.json";
+const NIST_SP800_171_R2_PATH: &str = "cprt-sp_800_171_2_0_0.json";
 const NIST_SP800_172_V1_PATH: &str = "cprt-sp_800_172_1_0_0.json";
 
 #[tokio::main]
@@ -70,18 +71,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    // Optional: Load SP 800-171 Rev 2 if path provided
-    if let Ok(sp171r2_path) = std::env::var("NIST_SP800_171_R2_PATH") {
-        let sp171r2_key = NistDocumentKey::new(NistDocument::Sp800171, NistRevision::Rev2);
-        info!("Loading {} from: {}", sp171r2_key.display_name(), sp171r2_path);
-        match CmmcState::load_json(&sp171r2_path) {
-            Ok(data) => {
-                datasets.push((sp171r2_key, data));
-                info!("{} loaded successfully", sp171r2_key.display_name());
-            }
-            Err(e) => {
-                tracing::warn!("Failed to load {}: {}", sp171r2_key.display_name(), e);
-            }
+    let sp171r2_key = NistDocumentKey::new(NistDocument::Sp800171, NistRevision::Rev2);
+    let sp171r2_path = std::env::var("NIST_SP800_171_R2_PATH")
+        .unwrap_or_else(|_| NIST_SP800_171_R2_PATH.to_string());
+    info!("Loading {} from: {}", sp171r2_key.display_name(), sp171r2_path);
+    match CmmcState::load_json(&sp171r2_path) {
+        Ok(data) => {
+            datasets.push((sp171r2_key, data));
+            info!("{} loaded successfully", sp171r2_key.display_name());
+        }
+        Err(e) => {
+            tracing::warn!("Failed to load {}: {}", sp171r2_key.display_name(), e);
         }
     }
 

@@ -159,12 +159,12 @@ fn get_family_requirements(
 ) -> Vec<Requirement> {
     let family_prefix = &family.element_identifier;
 
+    let family_prefix_dot = format!("{}.", family_prefix);
     elements
         .iter()
         .filter(|e: &&Element| {
             e.element_type == ElementType::Requirement
-                && e.element_identifier.starts_with(family_prefix)
-                && e.element_identifier.len() > family_prefix.len()
+                && e.element_identifier.starts_with(&family_prefix_dot)
         })
         .map(|req: &Element| {
             let security_requirements =
