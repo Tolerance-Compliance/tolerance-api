@@ -7,7 +7,23 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use super::index::SearchIndex;
-use super::model::{CmmcLevel, Element, NistData, NistDocument, NistDocumentKey, NistRevision};
+use super::model::{Document, Element, NistData, NistDocumentKey, Relationship};
+
+/// Convenience view over a single loaded document.
+///
+/// Obtain via [`CmmcState::get_document`] to avoid separate calls to
+/// `data()`, `index()`, and `elements()` — and the `.unwrap()` calls
+/// that come with them.
+pub struct DocumentContext<'a> {
+    /// All elements in the document
+    pub elements: &'a [Element],
+    /// All relationships in the document
+    pub relationships: &'a [Relationship],
+    /// Pre-built search index
+    pub index: &'a SearchIndex,
+    /// Document metadata (name, version, website, etc.)
+    pub documents: &'a [Document],
+}
 
 /// Data and index for a single document+revision
 struct DocumentData {
@@ -34,27 +50,11 @@ impl CmmcState {
         }
     }
 
-    /// Create state from legacy CMMC level pairs (deprecated)
-    #[allow(deprecated)]
-    pub fn from_levels(datasets: Vec<(CmmcLevel, NistData)>) -> Self {
-        let converted: Vec<(NistDocumentKey, NistData)> = datasets
-            .into_iter()
-            .map(|(level, data)| {
-                let key = match level {
-                    CmmcLevel::L2 => NistDocumentKey::new(NistDocument::Sp800171, NistRevision::Rev3),
-                    CmmcLevel::L3 => NistDocumentKey::new(NistDocument::Sp800172, NistRevision::V1),
-                };
-                (key, data)
-            })
-            .collect();
-        Self::new(converted)
-    }
-
     /// Load a single document from a JSON file
     pub fn load_json(path: &str) -> Result<NistData, std::io::Error> {
         let contents = std::fs::read_to_string(path)?;
         serde_json::from_str(&contents)
-            .map_err(|e: serde_json::Error| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
     }
 
     /// Get all available document keys
@@ -62,80 +62,22 @@ impl CmmcState {
         self.documents.keys().copied().collect()
     }
 
-    /// Get the available levels (deprecated - use available_documents)
-    #[allow(deprecated)]
-    pub fn available_levels(&self) -> Vec<CmmcLevel> {
-        self.documents
-            .keys()
-            .filter_map(|key| match (key.document, key.revision) {
-                (NistDocument::Sp800171, NistRevision::Rev3) => Some(CmmcLevel::L2),
-                (NistDocument::Sp800172, NistRevision::V1) => Some(CmmcLevel::L3),
-                _ => None,
-            })
-            .collect()
-    }
-
-    fn document_data(&self, key: NistDocumentKey) -> Option<&DocumentData> {
-        self.documents.get(&key)
-    }
-
-    /// Get reference to the raw NIST data for a document
-    pub fn data(&self, key: NistDocumentKey) -> Option<&NistData> {
-        self.document_data(key).map(|dd| &dd.data)
-    }
-
-    /// Get reference to the search index for a document
-    pub fn index(&self, key: NistDocumentKey) -> Option<&SearchIndex> {
-        self.document_data(key).map(|dd| &dd.index)
-    }
-
-    /// Get reference to elements slice for a document
-    pub fn elements(&self, key: NistDocumentKey) -> Option<&[Element]> {
-        self.document_data(key)
-            .map(|dd| dd.data.response.elements.elements.as_slice())
+    /// Get a combined view of elements, relationships, index, and metadata for a document.
+    ///
+    /// This is the preferred access method for handlers — one lookup instead of three.
+    pub fn get_document(&self, key: NistDocumentKey) -> Option<DocumentContext<'_>> {
+        self.documents.get(&key).map(|dd| DocumentContext {
+            elements: &dd.data.response.elements.elements,
+            relationships: &dd.data.response.elements.relationships,
+            index: &dd.index,
+            documents: &dd.data.response.elements.documents,
+        })
     }
 
     /// Get element by index for a document
     pub fn get_element(&self, key: NistDocumentKey, idx: usize) -> Option<&Element> {
-        self.elements(key).and_then(|els| els.get(idx))
-    }
-
-    // Deprecated methods for backward compatibility
-    #[allow(deprecated)]
-    fn level_data(&self, level: CmmcLevel) -> Option<&DocumentData> {
-        let key = match level {
-            CmmcLevel::L2 => NistDocumentKey::new(NistDocument::Sp800171, NistRevision::Rev3),
-            CmmcLevel::L3 => NistDocumentKey::new(NistDocument::Sp800172, NistRevision::V1),
-        };
-        self.document_data(key)
-    }
-
-    /// Get reference to the raw NIST data for a level (deprecated)
-    #[allow(deprecated)]
-    #[deprecated(note = "Use data(NistDocumentKey) instead")]
-    pub fn data_by_level(&self, level: CmmcLevel) -> Option<&NistData> {
-        self.level_data(level).map(|ld| &ld.data)
-    }
-
-    /// Get reference to the search index for a level (deprecated)
-    #[allow(deprecated)]
-    #[deprecated(note = "Use index(NistDocumentKey) instead")]
-    pub fn index_by_level(&self, level: CmmcLevel) -> Option<&SearchIndex> {
-        self.level_data(level).map(|ld| &ld.index)
-    }
-
-    /// Get reference to elements slice for a level (deprecated)
-    #[allow(deprecated)]
-    #[deprecated(note = "Use elements(NistDocumentKey) instead")]
-    pub fn elements_by_level(&self, level: CmmcLevel) -> Option<&[Element]> {
-        self.level_data(level)
-            .map(|ld| ld.data.response.elements.elements.as_slice())
-    }
-
-    /// Get element by index for a level (deprecated)
-    #[allow(deprecated)]
-    #[deprecated(note = "Use get_element(NistDocumentKey, usize) instead")]
-    pub fn get_element_by_level(&self, level: CmmcLevel, idx: usize) -> Option<&Element> {
-        self.elements_by_level(level).and_then(|els| els.get(idx))
+        self.documents
+            .get(&key)
+            .and_then(|dd| dd.data.response.elements.elements.get(idx))
     }
 }
