@@ -81,6 +81,21 @@ pub fn parse_revision(revision: &str) -> Result<NistRevision, ApiError> {
 pub fn parse_document_key(document: &str, revision: &str) -> Result<NistDocumentKey, ApiError> {
     let doc = parse_document(document)?;
     let rev = parse_revision(revision)?;
+
+    match (doc, rev) {
+        (NistDocument::Sp800171, NistRevision::V1) => {
+            return Err(ApiError::BadRequest(
+                "SP 800-171 uses revisions, not versions. Use r1, r2, or r3 (e.g. /sp800-171/r3).".to_string(),
+            ));
+        }
+        (NistDocument::Sp800172, NistRevision::Rev1 | NistRevision::Rev2 | NistRevision::Rev3) => {
+            return Err(ApiError::BadRequest(
+                "SP 800-172 uses versions, not revisions. Use v1 (e.g. /sp800-172/v1).".to_string(),
+            ));
+        }
+        _ => {}
+    }
+
     Ok(NistDocumentKey::new(doc, rev))
 }
 
