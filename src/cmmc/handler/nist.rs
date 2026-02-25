@@ -1,12 +1,8 @@
-//! New NIST API handlers using /v1/nist/:document/:revision structure
-//!
-//! These handlers replace the legacy CMMC level-based API with a more flexible
-//! document+revision structure that supports multiple revisions.
+//! /v1/nist/:document/:revision/*
 
 use axum::{
     extract::{Path, Query, State},
     http::HeaderMap,
-    Json,
 };
 
 use crate::cmmc::model::{Document, Element, ElementType, Relationship};
@@ -17,25 +13,24 @@ use crate::handler::error::ApiError;
 
 use super::query::{parse_document_key, ElementQuery};
 
-/// Document info for discovery endpoint
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct DocumentInfo {
     /// URL path identifier (e.g., "sp800-171/r3")
-    pub id: String,
+    pub id:       String,
     /// Human-readable name
-    pub name: String,
+    pub name:     String,
     /// NIST document identifier
     pub document: String,
     /// Revision string
     pub revision: String,
 }
 
-/// Get list of available documents
+/// Get list of available documents.
 #[utoipa::path(
     get,
     path = "/v1/nist/documents",
     responses(
-        (status = 200, description = "List of available documents.",
+        (status = 200, description = "List of available documents. Send `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).",
          content(
              (Vec<DocumentInfo> = "application/json"),
              (String = "text/toon")
@@ -62,7 +57,7 @@ pub async fn get_documents(
     FormatResponse::with_format(docs, wants_toon(&headers))
 }
 
-/// Get summary for a specific document+revision
+/// Get summary for a specific document+revision.
 #[utoipa::path(
     get,
     operation_id = "nist_get_summary",
@@ -72,7 +67,7 @@ pub async fn get_documents(
         ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)")
     ),
     responses(
-        (status = 200, description = "Summary retrieved successfully.",
+        (status = 200, description = "Summary retrieved successfully. Send `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).",
          content(
              (DataSummary = "application/json"),
              (String = "text/toon")
@@ -87,27 +82,26 @@ pub async fn get_summary(
     headers: HeaderMap,
 ) -> Result<FormatResponse<DataSummary>, ApiError> {
     let key = parse_document_key(&document, &revision)?;
-    let data = state.data(key).ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
-    let index = state.index(key).unwrap();
+    let doc = state.get_document(key)
+        .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
     let summary = DataSummary {
-        document: data.response.elements.documents.first().cloned().unwrap_or_else(|| {
-            Document {
-                doc_identifier: String::new(),
-                name: String::new(),
-                version: String::new(),
-                website: String::new(),
-            }
+        document: doc.documents.first().cloned().unwrap_or_else(|| Document {
+            doc_identifier: String::new(),
+            name: String::new(),
+            version: String::new(),
+            website: String::new(),
         }),
-        family_count: index.count_by_type(ElementType::Family),
-        requirement_count: index.count_by_type(ElementType::Requirement),
-        security_requirement_count: index.count_by_type(ElementType::SecurityRequirement),
-        relationship_count: data.response.elements.relationships.len(),
+        family_count:                doc.index.count_by_type(ElementType::Family),
+        requirement_count:           doc.index.count_by_type(ElementType::Requirement),
+        security_requirement_count:  doc.index.count_by_type(ElementType::SecurityRequirement),
+        relationship_count:          doc.relationships.len(),
     };
 
     Ok(FormatResponse::with_format(summary, wants_toon(&headers)))
 }
 
+/// Get all families.
 #[utoipa::path(
     get,
     operation_id = "nist_get_families",
@@ -132,20 +126,20 @@ pub async fn get_families(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<Family>>, ApiError> {
     let key = parse_document_key(&document, &revision)?;
-    let elements = state.elements(key).ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
-    let relationships = &state.data(key).unwrap().response.elements.relationships;
-    let family_indices = state.index(key).unwrap().get_by_type(ElementType::Family);
+    let doc = state.get_document(key)
+        .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let families: Vec<Family> = family_indices
+    let families = doc.index
+        .get_by_type(ElementType::Family)
         .iter()
-        .filter_map(|&idx| elements.get(idx))
-        .map(|family: &Element| build_family(family, elements, relationships))
+        .filter_map(|&idx| doc.elements.get(idx))
+        .map(|family| build_family(family, doc.elements))
         .collect();
 
     Ok(FormatResponse::with_format(families, wants_toon(&headers)))
 }
 
-/// Get a specific family by identifier
+/// Get a specific family by identifier.
 #[utoipa::path(
     get,
     operation_id = "nist_get_family",
@@ -171,22 +165,22 @@ pub async fn get_family(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Family>, ApiError> {
     let key = parse_document_key(&document, &revision)?;
-    let elements = state.elements(key).ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
-    let relationships = &state.data(key).unwrap().response.elements.relationships;
-    let index = state.index(key).unwrap();
+    let doc = state.get_document(key)
+        .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let idx = index
+    let idx = doc.index
         .get_by_identifier(&id)
         .ok_or_else(|| ApiError::NotFound(format!("Family '{}' not found", id)))?;
 
-    let family = elements
+    let family = doc.elements
         .get(idx)
-        .filter(|e: &&Element| e.element_type == ElementType::Family)
+        .filter(|e| e.element_type == ElementType::Family)
         .ok_or_else(|| ApiError::NotFound(format!("Family '{}' not found", id)))?;
 
-    Ok(FormatResponse::with_format(build_family(family, elements, relationships), wants_toon(&headers)))
+    Ok(FormatResponse::with_format(build_family(family, doc.elements), wants_toon(&headers)))
 }
 
+/// Get all elements.
 #[utoipa::path(
     get,
     operation_id = "nist_get_elements",
@@ -213,45 +207,35 @@ pub async fn get_elements(
     headers: HeaderMap,
 ) -> Result<FormatResponse<PaginatedResponse<Element>>, ApiError> {
     let key = parse_document_key(&document, &revision)?;
-    let elements = state.elements(key).ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
-    let index = state.index(key).unwrap();
+    let doc = state.get_document(key)
+        .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let filtered_indices: Vec<usize> = match (query.parse_element_type(), &query.search) {
-        (Some(element_type), Some(search_term)) => {
-            index.search(search_term, Some(element_type))
-        }
-        (Some(element_type), None) => index.get_by_type(element_type).to_vec(),
-        (None, Some(search_term)) => index.search(search_term, None),
-        (None, None) => (0..elements.len()).collect(),
+    let filtered: Vec<usize> = match (query.parse_element_type(), &query.search) {
+        (Some(et), Some(term)) => doc.index.search(term, Some(et)),
+        (Some(et), None)       => doc.index.get_by_type(et).to_vec(),
+        (None, Some(term))     => doc.index.search(term, None),
+        (None, None)           => (0..doc.elements.len()).collect(),
     };
 
-    let total = filtered_indices.len();
+    let total  = filtered.len();
     let offset = query.offset();
-    let limit = query.limit();
+    let limit  = query.limit();
 
-    let items: Vec<Element> = filtered_indices
+    let items = filtered
         .into_iter()
         .skip(offset)
         .take(limit)
-        .filter_map(|idx| elements.get(idx))
+        .filter_map(|idx| doc.elements.get(idx))
         .cloned()
         .collect();
 
-    let has_more = offset + limit < total;
-
     Ok(FormatResponse::with_format(
-        PaginatedResponse {
-            data: items,
-            total,
-            offset,
-            limit,
-            has_more,
-        },
+        PaginatedResponse { data: items, total, offset, limit, has_more: offset + limit < total },
         wants_toon(&headers),
     ))
 }
 
-/// Get a specific element by identifier
+/// Get a specific element by identifier.
 #[utoipa::path(
     get,
     operation_id = "nist_get_element",
@@ -277,24 +261,19 @@ pub async fn get_element(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Element>, ApiError> {
     let key = parse_document_key(&document, &revision)?;
-    let elements = state.elements(key).ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
-    let index = state.index(key).unwrap();
+    let doc = state.get_document(key)
+        .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let idx = index
+    let element = doc.index
         .get_by_identifier(&id)
-        .ok_or_else(|| ApiError::NotFound(format!("Element '{}' not found", id)))?;
-
-    let element = elements
-        .get(idx)
+        .and_then(|idx| doc.elements.get(idx))
         .cloned()
         .ok_or_else(|| ApiError::NotFound(format!("Element '{}' not found", id)))?;
 
     Ok(FormatResponse::with_format(element, wants_toon(&headers)))
 }
 
-/// Get all requirements
-///
-/// Returns all requirements across all families.
+/// Get all requirements across all families.
 #[utoipa::path(
     get,
     operation_id = "nist_get_requirements",
@@ -319,30 +298,20 @@ pub async fn get_requirements(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<Requirement>>, ApiError> {
     let key = parse_document_key(&document, &revision)?;
-    let elements = state.elements(key).ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
-    let relationships = &state.data(key).unwrap().response.elements.relationships;
-    let requirement_indices = state.index(key).unwrap().get_by_type(ElementType::Requirement);
+    let doc = state.get_document(key)
+        .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let requirements: Vec<Requirement> = requirement_indices
+    let requirements = doc.index
+        .get_by_type(ElementType::Requirement)
         .iter()
-        .filter_map(|&idx| elements.get(idx))
-        .map(|req: &Element| {
-            let security_requirements = get_security_requirements_for_requirement(req, elements, relationships);
-            Requirement {
-                identifier: req.element_identifier.clone(),
-                title: req.title.clone(),
-                text: req.text.clone(),
-                security_requirements,
-            }
-        })
+        .filter_map(|&idx| doc.elements.get(idx))
+        .map(|req| build_requirement(req, doc.elements))
         .collect();
 
     Ok(FormatResponse::with_format(requirements, wants_toon(&headers)))
 }
 
-/// Get all security requirements
-///
-/// Returns all security requirements with discussion and assessment text.
+/// Get all security requirements with discussion and assessment text.
 #[utoipa::path(
     get,
     operation_id = "nist_get_security_requirements",
@@ -367,30 +336,20 @@ pub async fn get_security_requirements(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<SecurityRequirement>>, ApiError> {
     let key = parse_document_key(&document, &revision)?;
-    let elements = state.elements(key).ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
-    let sr_indices = state.index(key).unwrap().get_by_type(ElementType::SecurityRequirement);
+    let doc = state.get_document(key)
+        .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let security_requirements: Vec<SecurityRequirement> = sr_indices
+    let security_requirements = doc.index
+        .get_by_type(ElementType::SecurityRequirement)
         .iter()
-        .filter_map(|&idx| elements.get(idx))
-        .map(|sr: &Element| {
-            let discussion = find_related_text(elements, &sr.element_identifier, ElementType::Discussion);
-            let assessment = find_related_text(elements, &sr.element_identifier, ElementType::Assessment);
-
-            SecurityRequirement {
-                identifier: sr.element_identifier.clone(),
-                title: sr.title.clone(),
-                text: sr.text.clone(),
-                discussion,
-                assessment,
-            }
-        })
+        .filter_map(|&idx| doc.elements.get(idx))
+        .map(|sr| build_security_requirement(sr, doc.elements))
         .collect();
 
     Ok(FormatResponse::with_format(security_requirements, wants_toon(&headers)))
 }
 
-/// Get all relationships
+/// Get all relationships.
 #[utoipa::path(
     get,
     operation_id = "nist_get_relationships",
@@ -415,12 +374,13 @@ pub async fn get_relationships(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<Relationship>>, ApiError> {
     let key = parse_document_key(&document, &revision)?;
-    let data = state.data(key).ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
+    let doc = state.get_document(key)
+        .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    Ok(FormatResponse::with_format(data.response.elements.relationships.clone(), wants_toon(&headers)))
+    Ok(FormatResponse::with_format(doc.relationships.to_vec(), wants_toon(&headers)))
 }
 
-/// Get relationships for a specific element
+/// Get relationships for a specific element.
 #[utoipa::path(
     get,
     operation_id = "nist_get_element_relationships",
@@ -446,18 +406,14 @@ pub async fn get_element_relationships(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<Relationship>>, ApiError> {
     let key = parse_document_key(&document, &revision)?;
-    let index = state.index(key).ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
+    let doc = state.get_document(key)
+        .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    // Verify element exists
-    index
+    doc.index
         .get_by_identifier(&id)
         .ok_or_else(|| ApiError::NotFound(format!("Element '{}' not found", id)))?;
 
-    let data = state.data(key).unwrap();
-    let relationships: Vec<Relationship> = data
-        .response
-        .elements
-        .relationships
+    let relationships = doc.relationships
         .iter()
         .filter(|r| r.source_element_identifier == id || r.dest_element_identifier == id)
         .cloned()
@@ -466,78 +422,58 @@ pub async fn get_element_relationships(
     Ok(FormatResponse::with_format(relationships, wants_toon(&headers)))
 }
 
-fn build_family(family: &Element, elements: &[Element], relationships: &[Relationship]) -> Family {
-    let requirements = get_family_requirements(family, elements, relationships);
+// These are `pub(crate)` so the legacy CMMC handlers in families.rs can reuse
+// them without duplicating the logic.
+
+pub(crate) fn build_family(family: &Element, elements: &[Element]) -> Family {
     Family {
         identifier: family.element_identifier.clone(),
-        title: family.title.clone(),
-        requirements,
+        title:      family.title.clone(),
+        requirements: get_family_requirements(family, elements),
     }
 }
 
-fn get_family_requirements(
-    family: &Element,
-    elements: &[Element],
-    relationships: &[Relationship],
-) -> Vec<Requirement> {
-    let family_prefix = &family.element_identifier;
-
-    let family_prefix_dot = format!("{}.", family_prefix);
+fn get_family_requirements(family: &Element, elements: &[Element]) -> Vec<Requirement> {
+    let prefix = format!("{}.", family.element_identifier);
     elements
         .iter()
-        .filter(|e| {
-            e.element_type == ElementType::Requirement
-                && e.element_identifier.starts_with(&family_prefix_dot)
-        })
-        .map(|req| {
-            let security_requirements = get_security_requirements_for_requirement(req, elements, relationships);
-            Requirement {
-                identifier: req.element_identifier.clone(),
-                title: req.title.clone(),
-                text: req.text.clone(),
-                security_requirements,
-            }
-        })
+        .filter(|e| e.element_type == ElementType::Requirement && e.element_identifier.starts_with(&prefix))
+        .map(|req| build_requirement(req, elements))
         .collect()
 }
 
-fn get_security_requirements_for_requirement(
-    requirement: &Element,
-    elements: &[Element],
-    _relationships: &[Relationship],
-) -> Vec<SecurityRequirement> {
-    let req_id = &requirement.element_identifier;
-    let sr_prefix = format!("SR-{}", req_id);
+pub(crate) fn build_requirement(req: &Element, elements: &[Element]) -> Requirement {
+    Requirement {
+        identifier:           req.element_identifier.clone(),
+        title:                req.title.clone(),
+        text:                 req.text.clone(),
+        security_requirements: get_security_requirements_for(req, elements),
+    }
+}
 
+fn get_security_requirements_for(req: &Element, elements: &[Element]) -> Vec<SecurityRequirement> {
+    let prefix = format!("SR-{}", req.element_identifier);
     elements
         .iter()
-        .filter(|e| {
-            e.element_type == ElementType::SecurityRequirement
-                && e.element_identifier.starts_with(&sr_prefix)
-        })
-        .map(|sr| {
-            let discussion = find_related_text(elements, &sr.element_identifier, ElementType::Discussion);
-            let assessment = find_related_text(elements, &sr.element_identifier, ElementType::Assessment);
-
-            SecurityRequirement {
-                identifier: sr.element_identifier.clone(),
-                title: sr.title.clone(),
-                text: sr.text.clone(),
-                discussion,
-                assessment,
-            }
-        })
+        .filter(|e| e.element_type == ElementType::SecurityRequirement && e.element_identifier.starts_with(&prefix))
+        .map(|sr| build_security_requirement(sr, elements))
         .collect()
 }
 
-fn find_related_text(
-    elements: &[Element],
-    sr_identifier: &str,
-    element_type: ElementType,
-) -> Option<String> {
+pub(crate) fn build_security_requirement(sr: &Element, elements: &[Element]) -> SecurityRequirement {
+    SecurityRequirement {
+        identifier: sr.element_identifier.clone(),
+        title:      sr.title.clone(),
+        text:       sr.text.clone(),
+        discussion: find_related_text(elements, &sr.element_identifier, ElementType::Discussion),
+        assessment: find_related_text(elements, &sr.element_identifier, ElementType::Assessment),
+    }
+}
+
+fn find_related_text(elements: &[Element], id: &str, element_type: ElementType) -> Option<String> {
     elements
         .iter()
-        .find(|e| e.element_type == element_type && e.element_identifier == sr_identifier)
+        .find(|e| e.element_type == element_type && e.element_identifier == id)
         .map(|e| e.text.clone())
         .filter(|t| !t.is_empty())
 }

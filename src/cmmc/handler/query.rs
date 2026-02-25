@@ -1,28 +1,18 @@
-//! Query parameter types for CMMC API endpoints
+//! Query parameter types and path-parsing helpers
 
 use serde::Deserialize;
 
-use crate::cmmc::model::{CmmcLevel, ElementType, NistDocument, NistDocumentKey, NistRevision};
+use crate::cmmc::model::{ElementType, NistDocument, NistDocumentKey, NistRevision};
 use crate::handler::error::ApiError;
 
-/// Parse a document string from a path parameter into a NistDocument
-pub fn parse_document(document: &str) -> Result<NistDocument, ApiError> {
-    document
-        .parse::<NistDocument>()
-        .map_err(|e| ApiError::BadRequest(e))
-}
-
-/// Parse a revision string from a path parameter into a NistRevision
-pub fn parse_revision(revision: &str) -> Result<NistRevision, ApiError> {
-    revision
-        .parse::<NistRevision>()
-        .map_err(|e| ApiError::BadRequest(e))
-}
-
-/// Parse document and revision strings into a NistDocumentKey
+/// Parse document and revision path segments into a `NistDocumentKey`
 pub fn parse_document_key(document: &str, revision: &str) -> Result<NistDocumentKey, ApiError> {
-    let doc = parse_document(document)?;
-    let rev = parse_revision(revision)?;
+    let doc = document
+        .parse::<NistDocument>()
+        .map_err(|e| ApiError::BadRequest(e))?;
+    let rev = revision
+        .parse::<NistRevision>()
+        .map_err(|e| ApiError::BadRequest(e))?;
 
     match (doc, rev) {
         (NistDocument::Sp800171, NistRevision::V1) => {
@@ -39,14 +29,6 @@ pub fn parse_document_key(document: &str, revision: &str) -> Result<NistDocument
     }
 
     Ok(NistDocumentKey::new(doc, rev))
-}
-
-/// Parse a level string from a path parameter into a CmmcLevel (deprecated)
-#[allow(deprecated)]
-pub fn parse_level(level: &str) -> Result<CmmcLevel, ApiError> {
-    level
-        .parse::<CmmcLevel>()
-        .map_err(|e| ApiError::BadRequest(e))
 }
 
 /// Query parameters for filtering elements with pagination
@@ -68,33 +50,30 @@ impl ElementQuery {
     pub const DEFAULT_LIMIT: usize = 100;
     pub const MAX_LIMIT: usize = 1000;
 
-    /// Get the limit, clamped to MAX_LIMIT
     pub fn limit(&self) -> usize {
         self.limit.unwrap_or(Self::DEFAULT_LIMIT).min(Self::MAX_LIMIT)
     }
 
-    /// Get the offset
     pub fn offset(&self) -> usize {
         self.offset.unwrap_or(0)
     }
 
-    /// Parse the element type string into an ElementType
     pub fn parse_element_type(&self) -> Option<ElementType> {
         self.element_type.as_ref().and_then(|t| {
             match t.to_lowercase().as_str() {
-                "family" => Some(ElementType::Family),
-                "requirement" => Some(ElementType::Requirement),
+                "family"               => Some(ElementType::Family),
+                "requirement"          => Some(ElementType::Requirement),
                 "security_requirement" => Some(ElementType::SecurityRequirement),
-                "discussion" => Some(ElementType::Discussion),
-                "assessment" => Some(ElementType::Assessment),
-                "adversary_effect" => Some(ElementType::AdversaryEffect),
-                "protection_strategy" => Some(ElementType::ProtectionStrategy),
-                "effect" => Some(ElementType::Effect),
-                "tactic" => Some(ElementType::Tactic),
-                "impact" => Some(ElementType::Impact),
-                "expected_result" => Some(ElementType::ExpectedResult),
-                "example" => Some(ElementType::Example),
-                _ => None,
+                "discussion"           => Some(ElementType::Discussion),
+                "assessment"           => Some(ElementType::Assessment),
+                "adversary_effect"     => Some(ElementType::AdversaryEffect),
+                "protection_strategy"  => Some(ElementType::ProtectionStrategy),
+                "effect"               => Some(ElementType::Effect),
+                "tactic"               => Some(ElementType::Tactic),
+                "impact"               => Some(ElementType::Impact),
+                "expected_result"      => Some(ElementType::ExpectedResult),
+                "example"              => Some(ElementType::Example),
+                _                      => None,
             }
         })
     }
