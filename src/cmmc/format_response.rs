@@ -6,7 +6,7 @@ use axum::{
 };
 use serde::Serialize;
 
-use super::toon;
+use toon_format::{encode, EncodeOptions};
 
 /// Returns `true` when the client signals it accepts `text/toon` via the `Accept` header.
 pub fn wants_toon(headers: &axum::http::HeaderMap) -> bool {
@@ -50,7 +50,7 @@ impl<T: Serialize> IntoResponse for FormatResponse<T> {
     fn into_response(self) -> Response {
         if self.use_toon {
             // Serialize to TOON
-            match toon::to_toon(&self.data) {
+            match encode(&self.data, &EncodeOptions::new()) {
                 Ok(toon_str) => {
                     (
                         StatusCode::OK,

@@ -5,7 +5,6 @@ pub mod response;
 pub mod index;
 pub mod state;
 pub mod handler;
-pub mod toon;
 pub mod format_response;
 
 // Re-export commonly used types
