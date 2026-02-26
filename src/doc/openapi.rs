@@ -43,36 +43,65 @@ use crate::constant::OPENAPI_CACHE_DURATION;
     ),
     tags(
         (name = "Health", description = "Health check endpoint"),
-        (name = "NIST",   description = "NIST SP 800-171 & 800-172 API"),
+        (name = "NIST",   description = "NIST SP 800-171, 800-171A, 800-172 & 800-172A API"),
     ),
     info(
         title = "Tolerance API",
         version = env!("CARGO_PKG_VERSION"),
-        description = r#"REST API for NIST SP 800-171 and SP 800-172 security requirements.
+        description = r#"REST API for NIST SP 800-171, SP 800-171A, SP 800-172, and SP 800-172A security requirements and assessment procedures.
 
-## Endpoints
+## Supported Documents
 
-The `/v1/nist/:document/:revision/*` endpoints support all document revisions:
-- SP 800-171 Rev 1, Rev 2, Rev 3
-- SP 800-172 v1.0
+The `/v1/nist/:document/:revision/*` endpoints support:
 
-Examples:
-- `/v1/nist/sp800-171/r3/families` — SP 800-171 Rev 3
-- `/v1/nist/sp800-171/r2/families` — SP 800-171 Rev 2
-- `/v1/nist/sp800-172/v1/families` — SP 800-172 v1.0
+| Document     | Revision         | Description                                       |
+|--------------|------------------|---------------------------------------------------|
+| `sp800-171`  | `r2`, `r3`       | Security Requirements for CUI.                    |
+| `sp800-171a` | `r3`             | Assessing Security Requirements for CUI.          |
+| `sp800-172`  | `v1`             | Enhanced Security Requirements for CUI.           |
+| `sp800-172a` | `v1`             | Assessing Enhanced Security Requirements for CUI. |
 
-Use `/v1/nist/documents` to discover all loaded documents and revisions.
+Use `/v1/nist/documents` to discover all loaded documents at runtime.
+
+## Assessment Guide Element Types (171A / 172A)
+
+The assessment guides introduce additional element types beyond `family`,
+`requirement`, and `security_requirement`:
+
+| Type | Prefix | Description |
+|---                 |---    |---                                         |
+| `determination`    | `DS-` | Pass/fail criteria for a requirement.      |
+| `examine`          | `E-`  | Documents and artifacts to review.         |
+| `interview`        | `I-`  | Personnel to interview.                    |
+| `test`             | `T-`  | Mechanisms and processes to exercise.      |
+| `odp`              | —     | Organization-Defined Parameter definition. |
+| `odp_statement`    | `OS-` | ODP placeholder text in the requirement.   |
+| `odp_type`         | —     | ODP input type (Assignment / Selection).   |
+
+Use the relationships endpoint to traverse from a `security_requirement` to
+its linked `examine`, `interview`, `test`, `determination`, and `odp` elements:
+
+```
+GET /v1/nist/sp800-172a/v1/elements/3.12.1e/relationships
+```
 
 ## Content Negotiation
 
-Send `Accept: text/toon` for Token-Oriented Object Notation — a compact,
-LLM-friendly format with 30-40% fewer tokens than JSON.
+Send `Accept: text/toon`, see [the TOON format](https://github.com/toon-format/toon).
 
+Send `Accept: application/json` for JSON.
+
+Examples
+
+- `text/toon`:
 ```bash
 curl -H "Accept: text/toon" http://localhost:3000/v1/nist/sp800-171/r3/families
 ```
 
-See: https://github.com/toon-format/toon
+- `application/json`:
+```bash
+curl -H "Accept: application/json" http://localhost:3000/v1/nist/sp800-171/r3/families
+```
 "#,
         license(name = "")
     )

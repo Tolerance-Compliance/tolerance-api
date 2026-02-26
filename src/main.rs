@@ -42,9 +42,14 @@ fn document_specs() -> Vec<DocumentSpec> {
             default_path: Some("data/cprt-sp_800_172_1_0_0.json"),
         },
         DocumentSpec {
-            key:          NistDocumentKey::new(NistDocument::Sp800171, NistRevision::Rev1),
-            env_var:      "NIST_SP800_171_R1_PATH",
-            default_path: None, // only loaded when env var is set
+            key:          NistDocumentKey::new(NistDocument::Sp800171A, NistRevision::Rev3),
+            env_var:      "NIST_SP800_171A_R3_PATH",
+            default_path: Some("data/cprt-sp_800_171_a_3_0_0.json"),
+        },
+        DocumentSpec {
+            key:          NistDocumentKey::new(NistDocument::Sp800172A, NistRevision::V1),
+            env_var:      "NIST_SP800_172A_V1_PATH",
+            default_path: Some("data/cprt-sp_800_172a_1_0_0.json"),
         },
     ]
 }

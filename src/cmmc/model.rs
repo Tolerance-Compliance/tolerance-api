@@ -48,15 +48,21 @@ pub struct RelationshipType {
 pub enum NistDocument {
     #[serde(rename = "sp800-171")]
     Sp800171,
+    #[serde(rename = "sp800-171a")]
+    Sp800171A,
     #[serde(rename = "sp800-172")]
     Sp800172,
+    #[serde(rename = "sp800-172a")]
+    Sp800172A,
 }
 
 impl NistDocument {
     pub fn as_str(&self) -> &'static str {
         match self {
-            NistDocument::Sp800171 => "sp800-171",
-            NistDocument::Sp800172 => "sp800-172",
+            NistDocument::Sp800171  => "sp800-171",
+            NistDocument::Sp800171A => "sp800-171a",
+            NistDocument::Sp800172  => "sp800-172",
+            NistDocument::Sp800172A => "sp800-172a",
         }
     }
 }
@@ -71,9 +77,13 @@ impl std::str::FromStr for NistDocument {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "sp800-171" | "800-171" | "171" => Ok(NistDocument::Sp800171),
-            "sp800-172" | "800-172" | "172" => Ok(NistDocument::Sp800172),
-            _ => Err(format!("Unknown document: '{}'. Use 'sp800-171' or 'sp800-172'.", s)),
+            "sp800-171"  | "800-171"  | "171"  => Ok(NistDocument::Sp800171),
+            "sp800-171a" | "800-171a" | "171a" => Ok(NistDocument::Sp800171A),
+            "sp800-172"  | "800-172"  | "172"  => Ok(NistDocument::Sp800172),
+            "sp800-172a" | "800-172a" | "172a" => Ok(NistDocument::Sp800172A),
+            _ => Err(format!(
+                "Unknown document: '{}'. Use 'sp800-171', 'sp800-171a', 'sp800-172', or 'sp800-172a'.", s
+            )),
         }
     }
 }
@@ -81,8 +91,6 @@ impl std::str::FromStr for NistDocument {
 /// Revision of a NIST document
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 pub enum NistRevision {
-    #[serde(rename = "r1")]
-    Rev1,
     #[serde(rename = "r2")]
     Rev2,
     #[serde(rename = "r3")]
@@ -95,7 +103,6 @@ pub enum NistRevision {
 impl NistRevision {
     pub fn as_str(&self) -> &'static str {
         match self {
-            NistRevision::Rev1 => "r1",
             NistRevision::Rev2 => "r2",
             NistRevision::Rev3 => "r3",
             NistRevision::V1   => "v1",
@@ -113,11 +120,10 @@ impl std::str::FromStr for NistRevision {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "r1" | "rev1" | "1" => Ok(NistRevision::Rev1),
             "r2" | "rev2" | "2" => Ok(NistRevision::Rev2),
             "r3" | "rev3" | "3" => Ok(NistRevision::Rev3),
             "v1" | "1.0"        => Ok(NistRevision::V1),
-            _ => Err(format!("Unknown revision: '{}'. Use 'r1', 'r2', 'r3', or 'v1'.", s)),
+            _ => Err(format!("Unknown revision: '{}'. Use 'r2', 'r3', or 'v1'.", s)),
         }
     }
 }
@@ -137,10 +143,11 @@ impl NistDocumentKey {
     /// The CPRT framework version identifier used in the NIST API URL
     pub fn cprt_identifier(&self) -> &'static str {
         match (self.document, self.revision) {
-            (NistDocument::Sp800171, NistRevision::Rev1) => "sp_800_171_1_0_0",
-            (NistDocument::Sp800171, NistRevision::Rev2) => "sp_800_171_2_0_0",
-            (NistDocument::Sp800171, NistRevision::Rev3) => "sp_800_171_3_0_0",
-            (NistDocument::Sp800172, NistRevision::V1)   => "sp_800_172_1_0_0",
+            (NistDocument::Sp800171,  NistRevision::Rev2) => "sp_800_171_2_0_0",
+            (NistDocument::Sp800171,  NistRevision::Rev3) => "sp_800_171_3_0_0",
+            (NistDocument::Sp800171A, NistRevision::Rev3) => "sp_800_171_a_3_0_0",
+            (NistDocument::Sp800172,  NistRevision::V1)   => "sp_800_172_1_0_0",
+            (NistDocument::Sp800172A, NistRevision::V1)   => "sp_800_172a_1_0_0",
             _ => "unknown",
         }
     }
@@ -148,10 +155,11 @@ impl NistDocumentKey {
     /// Human-readable name for the document
     pub fn display_name(&self) -> String {
         match (self.document, self.revision) {
-            (NistDocument::Sp800171, NistRevision::Rev1) => "SP 800-171 Rev 1".to_string(),
-            (NistDocument::Sp800171, NistRevision::Rev2) => "SP 800-171 Rev 2".to_string(),
-            (NistDocument::Sp800171, NistRevision::Rev3) => "SP 800-171 Rev 3".to_string(),
-            (NistDocument::Sp800172, NistRevision::V1)   => "SP 800-172 v1.0".to_string(),
+            (NistDocument::Sp800171,  NistRevision::Rev2) => "SP 800-171 Rev 2".to_string(),
+            (NistDocument::Sp800171,  NistRevision::Rev3) => "SP 800-171 Rev 3".to_string(),
+            (NistDocument::Sp800171A, NistRevision::Rev3) => "SP 800-171A Rev 3".to_string(),
+            (NistDocument::Sp800172,  NistRevision::V1)   => "SP 800-172 v1.0".to_string(),
+            (NistDocument::Sp800172A, NistRevision::V1)   => "SP 800-172A v1.0".to_string(),
             _ => format!("{} {}", self.document, self.revision),
         }
     }
@@ -182,6 +190,14 @@ pub enum ElementType {
     Example,
     Sort,
     ReferenceItem,
+    Determination,
+    Examine,
+    Interview,
+    Test,
+    Odp,
+    OdpStatement,
+    OdpType,
+    WithdrawReason,
     #[serde(other)]
     Unknown,
 }
@@ -189,7 +205,7 @@ pub enum ElementType {
 /// A single element (family, requirement, or security requirement)
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Element {
-    pub element_type: ElementType,
+    pub element_type:       ElementType,
     pub element_identifier: String,
     pub title:              String,
     pub text:               String,

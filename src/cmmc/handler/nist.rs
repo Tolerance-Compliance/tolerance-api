@@ -63,8 +63,8 @@ pub async fn get_documents(
     operation_id = "nist_get_summary",
     path = "/v1/nist/{document}/{revision}/summary",
     params(
-        ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
-        ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)")
+        ("document" = String, Path, description = "NIST document: `sp800-171`, `sp800-171a`, `sp800-172`, or `sp800-172a`"),
+        ("revision" = String, Path, description = "Document revision: `r2`, `r3` (171/171a), `v1` (172/172a)")
     ),
     responses(
         (status = 200, description = "Summary retrieved successfully. Send `Accept: text/toon` for LLM-optimized output (30-40% fewer tokens).",
@@ -107,8 +107,8 @@ pub async fn get_summary(
     operation_id = "nist_get_families",
     path = "/v1/nist/{document}/{revision}/families",
     params(
-        ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
-        ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)")
+        ("document" = String, Path, description = "NIST document: `sp800-171`, `sp800-171a`, `sp800-172`, or `sp800-172a`"),
+        ("revision" = String, Path, description = "Document revision: `r2`, `r3` (171/171a), `v1` (172/172a)")
     ),
     responses(
         (status = 200, description = "List of families.",
@@ -145,8 +145,8 @@ pub async fn get_families(
     operation_id = "nist_get_family",
     path = "/v1/nist/{document}/{revision}/families/{id}",
     params(
-        ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
-        ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)"),
+        ("document" = String, Path, description = "NIST document: `sp800-171`, `sp800-171a`, `sp800-172`, or `sp800-172a`"),
+        ("revision" = String, Path, description = "Document revision: `r2`, `r3` (171/171a), `v1` (172/172a)"),
         ("id" = String, Path, description = "Family identifier")
     ),
     responses(
@@ -186,8 +186,8 @@ pub async fn get_family(
     operation_id = "nist_get_elements",
     path = "/v1/nist/{document}/{revision}/elements",
     params(
-        ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
-        ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)"),
+        ("document" = String, Path, description = "NIST document: `sp800-171`, `sp800-171a`, `sp800-172`, or `sp800-172a`"),
+        ("revision" = String, Path, description = "Document revision: `r2`, `r3` (171/171a), `v1` (172/172a)"),
         ElementQuery
     ),
     responses(
@@ -241,8 +241,8 @@ pub async fn get_elements(
     operation_id = "nist_get_element",
     path = "/v1/nist/{document}/{revision}/elements/{id}",
     params(
-        ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
-        ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)"),
+        ("document" = String, Path, description = "NIST document: `sp800-171`, `sp800-171a`, `sp800-172`, or `sp800-172a`"),
+        ("revision" = String, Path, description = "Document revision: `r2`, `r3` (171/171a), `v1` (172/172a)"),
         ("id" = String, Path, description = "Element identifier")
     ),
     responses(
@@ -279,8 +279,8 @@ pub async fn get_element(
     operation_id = "nist_get_requirements",
     path = "/v1/nist/{document}/{revision}/requirements",
     params(
-        ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
-        ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)")
+        ("document" = String, Path, description = "NIST document: `sp800-171`, `sp800-171a`, `sp800-172`, or `sp800-172a`"),
+        ("revision" = String, Path, description = "Document revision: `r2`, `r3` (171/171a), `v1` (172/172a)")
     ),
     responses(
         (status = 200, description = "List of requirements.",
@@ -317,8 +317,8 @@ pub async fn get_requirements(
     operation_id = "nist_get_security_requirements",
     path = "/v1/nist/{document}/{revision}/security-requirements",
     params(
-        ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
-        ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)")
+        ("document" = String, Path, description = "NIST document: `sp800-171`, `sp800-171a`, `sp800-172`, or `sp800-172a`"),
+        ("revision" = String, Path, description = "Document revision: `r2`, `r3` (171/171a), `v1` (172/172a)")
     ),
     responses(
         (status = 200, description = "List of security requirements.",
@@ -355,8 +355,8 @@ pub async fn get_security_requirements(
     operation_id = "nist_get_relationships",
     path = "/v1/nist/{document}/{revision}/relationships",
     params(
-        ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
-        ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)")
+        ("document" = String, Path, description = "NIST document: `sp800-171`, `sp800-171a`, `sp800-172`, or `sp800-172a`"),
+        ("revision" = String, Path, description = "Document revision: `r2`, `r3` (171/171a), `v1` (172/172a)")
     ),
     responses(
         (status = 200, description = "List of relationships.",
@@ -386,8 +386,8 @@ pub async fn get_relationships(
     operation_id = "nist_get_element_relationships",
     path = "/v1/nist/{document}/{revision}/elements/{id}/relationships",
     params(
-        ("document" = String, Path, description = "NIST document (sp800-171 or sp800-172)"),
-        ("revision" = String, Path, description = "Document revision (r1, r2, r3, or v1)"),
+        ("document" = String, Path, description = "NIST document: `sp800-171`, `sp800-171a`, `sp800-172`, or `sp800-172a`"),
+        ("revision" = String, Path, description = "Document revision: `r2`, `r3` (171/171a), `v1` (172/172a)"),
         ("id" = String, Path, description = "Element identifier")
     ),
     responses(
