@@ -3001,7 +3001,7 @@ dependencies = [
 
 [[package]]
 name = "tolerance-api"
-version = "0.1.13"
+version = "0.1.14"
 dependencies = [
  "axum 0.7.9",
  "chrono",
