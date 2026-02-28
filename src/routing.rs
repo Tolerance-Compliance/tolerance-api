@@ -32,9 +32,9 @@ fn create_cors_layer() -> CorsLayer {
 pub fn app(state: CmmcState) -> Router {
     Router::new()
         // Documentation
-        .route("/",                             get(swagger_ui))
-        .route("/api-docs/openapi.json",        get(openapi_json))
-        .route("/favicon.ico",                  get(favicon))
+        .route("/",                        get(swagger_ui))
+        .route("/api-docs/openapi.json",   get(openapi_json))
+        .route("/favicon.ico",             get(favicon))
         // Health check
         .route(HEALTH_ENDPOINT,                 get(health_check))
         // NIST API
