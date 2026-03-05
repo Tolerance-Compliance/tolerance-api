@@ -1,8 +1,8 @@
 [package]
 name = "tolerance-api"
 authors = [ "Sam Sporidis <samsporidissoftware@protonmail.com>" ]
-version = "0.1.17"
-edition = "2021"
+version = "0.1.19"
+edition = "2024"
 
 [[bin]]
 name = "tolerance-api"
