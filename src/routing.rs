@@ -5,9 +5,13 @@ use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 
 use crate::cmmc::handler::{
-    get_documents, get_nist_element, get_nist_element_relationships, get_nist_elements,
+    get_documents,
+    get_nist_element, get_nist_element_relationships, get_nist_elements,
     get_nist_families, get_nist_family, get_nist_relationships, get_nist_requirements,
     get_nist_security_requirements, get_nist_summary,
+    get_far_element, get_far_element_relationships, get_far_elements,
+    get_far_families, get_far_family, get_far_relationships, get_far_requirements,
+    get_far_summary,
 };
 use crate::cmmc::CmmcState;
 use crate::constant::{
@@ -16,6 +20,9 @@ use crate::constant::{
     NIST_ELEMENTS_ENDPOINT, NIST_FAMILIES_ENDPOINT, NIST_FAMILY_ENDPOINT,
     NIST_RELATIONSHIPS_ENDPOINT, NIST_REQUIREMENTS_ENDPOINT, NIST_SECURITY_REQS_ENDPOINT,
     NIST_SUMMARY_ENDPOINT,
+    FAR_ELEMENT_ENDPOINT, FAR_ELEMENT_RELATIONS_ENDPOINT,
+    FAR_ELEMENTS_ENDPOINT, FAR_FAMILIES_ENDPOINT, FAR_FAMILY_ENDPOINT,
+    FAR_RELATIONSHIPS_ENDPOINT, FAR_REQUIREMENTS_ENDPOINT, FAR_SUMMARY_ENDPOINT,
 };
 use crate::doc::{favicon, openapi_json, swagger_ui};
 use crate::handler::health::health_check;
@@ -48,6 +55,15 @@ pub fn app(state: CmmcState) -> Router {
         .route(NIST_SECURITY_REQS_ENDPOINT,     get(get_nist_security_requirements))
         .route(NIST_RELATIONSHIPS_ENDPOINT,     get(get_nist_relationships))
         .route(NIST_ELEMENT_RELATIONS_ENDPOINT, get(get_nist_element_relationships))
+        // FAR API
+        .route(FAR_SUMMARY_ENDPOINT,            get(get_far_summary))
+        .route(FAR_FAMILIES_ENDPOINT,           get(get_far_families))
+        .route(FAR_FAMILY_ENDPOINT,             get(get_far_family))
+        .route(FAR_ELEMENTS_ENDPOINT,           get(get_far_elements))
+        .route(FAR_ELEMENT_ENDPOINT,            get(get_far_element))
+        .route(FAR_REQUIREMENTS_ENDPOINT,       get(get_far_requirements))
+        .route(FAR_RELATIONSHIPS_ENDPOINT,      get(get_far_relationships))
+        .route(FAR_ELEMENT_RELATIONS_ENDPOINT,  get(get_far_element_relationships))
         // Middleware
         .with_state(state)
         .layer(create_cors_layer())

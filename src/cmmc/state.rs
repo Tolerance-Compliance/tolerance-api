@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use super::index::SearchIndex;
-use super::model::{Document, Element, NistData, NistDocumentKey, Relationship};
+use super::model::{Document, Element, NistData, DocumentKey, Relationship};
 
 /// Convenience view over a single loaded document.
 ///
@@ -26,15 +26,15 @@ struct DocumentData {
     index: SearchIndex,
 }
 
-/// Shared state holding all loaded NIST documents
+/// Shared state holding all loaded documents (NIST, FAR, etc.)
 #[derive(Clone)]
 pub struct CmmcState {
-    documents: Arc<HashMap<NistDocumentKey, DocumentData>>,
+    documents: Arc<HashMap<DocumentKey, DocumentData>>,
 }
 
 impl CmmcState {
     /// Create state from a set of (key, data) pairs
-    pub fn new(datasets: Vec<(NistDocumentKey, NistData)>) -> Self {
+    pub fn new(datasets: Vec<(DocumentKey, NistData)>) -> Self {
         let mut documents = HashMap::with_capacity(datasets.len());
         for (key, data) in datasets {
             let index = SearchIndex::build(&data.response.elements.elements);
@@ -53,14 +53,14 @@ impl CmmcState {
     }
 
     /// Get all available document keys
-    pub fn available_documents(&self) -> Vec<NistDocumentKey> {
+    pub fn available_documents(&self) -> Vec<DocumentKey> {
         self.documents.keys().copied().collect()
     }
 
     /// Get a combined view of elements, relationships, index, and metadata for a document.
     ///
     /// This is the preferred access method for handlers — one lookup instead of three.
-    pub fn get_document(&self, key: NistDocumentKey) -> Option<DocumentContext<'_>> {
+    pub fn get_document(&self, key: DocumentKey) -> Option<DocumentContext<'_>> {
         self.documents.get(&key).map(|dd| DocumentContext {
             elements: &dd.data.response.elements.elements,
             relationships: &dd.data.response.elements.relationships,
@@ -70,7 +70,7 @@ impl CmmcState {
     }
 
     /// Get element by index for a document
-    pub fn get_element(&self, key: NistDocumentKey, idx: usize) -> Option<&Element> {
+    pub fn get_element(&self, key: DocumentKey, idx: usize) -> Option<&Element> {
         self.documents
             .get(&key)
             .and_then(|dd| dd.data.response.elements.elements.get(idx))

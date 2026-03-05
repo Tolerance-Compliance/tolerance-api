@@ -23,6 +23,15 @@ use crate::constant::OPENAPI_CACHE_DURATION;
         crate::cmmc::handler::nist::get_security_requirements,
         crate::cmmc::handler::nist::get_relationships,
         crate::cmmc::handler::nist::get_element_relationships,
+        // FAR endpoints
+        crate::cmmc::handler::far::get_summary,
+        crate::cmmc::handler::far::get_families,
+        crate::cmmc::handler::far::get_family,
+        crate::cmmc::handler::far::get_elements,
+        crate::cmmc::handler::far::get_element,
+        crate::cmmc::handler::far::get_requirements,
+        crate::cmmc::handler::far::get_relationships,
+        crate::cmmc::handler::far::get_element_relationships,
     ),
     components(
         schemas(
@@ -36,21 +45,28 @@ use crate::constant::OPENAPI_CACHE_DURATION;
             crate::cmmc::model::Document,
             crate::cmmc::model::Relationship,
             crate::cmmc::model::NistDocument,
+            crate::cmmc::model::FarDocument,
+            crate::cmmc::model::DocumentSource,
             crate::cmmc::model::NistRevision,
+            crate::cmmc::model::DocumentRevision,
             crate::cmmc::model::NistDocumentKey,
+            crate::cmmc::model::DocumentKey,
             crate::cmmc::handler::nist::DocumentInfo,
         )
     ),
     tags(
         (name = "Health", description = "Health check endpoint"),
         (name = "NIST",   description = "NIST SP 800-171, 800-171A, 800-172 & 800-172A API"),
+        (name = "FAR",    description = "Federal Acquisition Regulation (FAR) documents API"),
     ),
     info(
         title = "Tolerance API",
         version = env!("CARGO_PKG_VERSION"),
-        description = r#"REST API for NIST SP 800-171, SP 800-171A, SP 800-172, and SP 800-172A security requirements and assessment procedures.
+        description = r#"REST API for NIST SP 800-171, SP 800-171A, SP 800-172, SP 800-172A, and FAR 52.204-21 security requirements and assessment procedures.
 
 ## Supported Documents
+
+### NIST Documents
 
 The `/v1/nist/:document/:revision/*` endpoints support:
 
@@ -61,7 +77,17 @@ The `/v1/nist/:document/:revision/*` endpoints support:
 | `sp800-172`  | `v1`             | Enhanced Security Requirements for CUI.           |
 | `sp800-172a` | `v1`             | Assessing Enhanced Security Requirements for CUI. |
 
-Use `/v1/nist/documents` to discover all loaded documents at runtime.
+Use `/v1/nist/documents` to discover all loaded NIST documents at runtime.
+
+### FAR Documents
+
+The `/v1/far/:document/:revision/*` endpoints support:
+
+| Document     | Revision | Description                                                    |
+|--------------|----------|----------------------------------------------------------------|
+| `52.204-21`  | `v2`     | Basic Safeguarding of Covered Contractor Information Systems (CMMC Level 1). |
+
+Example: `/v1/far/52.204-21/v2/families`
 
 ## Assessment Guide Element Types (171A / 172A)
 

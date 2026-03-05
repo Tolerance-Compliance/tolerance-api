@@ -11,7 +11,7 @@ use crate::cmmc::state::CmmcState;
 use crate::cmmc::format_response::{FormatResponse, wants_toon};
 use crate::handler::error::ApiError;
 
-use super::query::{parse_document_key, ElementQuery};
+use super::query::{parse_nist_document_key, ElementQuery};
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct DocumentInfo {
@@ -45,11 +45,18 @@ pub async fn get_documents(
     let mut docs: Vec<DocumentInfo> = state
         .available_documents()
         .into_iter()
-        .map(|key| DocumentInfo {
-            id: key.to_string(),
-            name: key.display_name(),
-            document: key.document.to_string(),
-            revision: key.revision.to_string(),
+        .filter_map(|key| {
+            // Only include NIST documents in this endpoint
+            if matches!(key.source(), crate::cmmc::model::DocumentSource::Nist) {
+                Some(DocumentInfo {
+                    id: key.to_string(),
+                    name: key.display_name(),
+                    document: key.document_string(),
+                    revision: key.revision_string(),
+                })
+            } else {
+                None
+            }
         })
         .collect();
 
@@ -81,7 +88,7 @@ pub async fn get_summary(
     Path((document, revision)): Path<(String, String)>,
     headers: HeaderMap,
 ) -> Result<FormatResponse<DataSummary>, ApiError> {
-    let key = parse_document_key(&document, &revision)?;
+    let key = parse_nist_document_key(&document, &revision)?;
     let doc = state.get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
@@ -125,7 +132,7 @@ pub async fn get_families(
     Path((document, revision)): Path<(String, String)>,
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<Family>>, ApiError> {
-    let key = parse_document_key(&document, &revision)?;
+    let key = parse_nist_document_key(&document, &revision)?;
     let doc = state.get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
@@ -164,7 +171,7 @@ pub async fn get_family(
     Path((document, revision, id)): Path<(String, String, String)>,
     headers: HeaderMap,
 ) -> Result<FormatResponse<Family>, ApiError> {
-    let key = parse_document_key(&document, &revision)?;
+    let key = parse_nist_document_key(&document, &revision)?;
     let doc = state.get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
@@ -206,7 +213,7 @@ pub async fn get_elements(
     Query(query): Query<ElementQuery>,
     headers: HeaderMap,
 ) -> Result<FormatResponse<PaginatedResponse<Element>>, ApiError> {
-    let key = parse_document_key(&document, &revision)?;
+    let key = parse_nist_document_key(&document, &revision)?;
     let doc = state.get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
@@ -260,7 +267,7 @@ pub async fn get_element(
     Path((document, revision, id)): Path<(String, String, String)>,
     headers: HeaderMap,
 ) -> Result<FormatResponse<Element>, ApiError> {
-    let key = parse_document_key(&document, &revision)?;
+    let key = parse_nist_document_key(&document, &revision)?;
     let doc = state.get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
@@ -297,7 +304,7 @@ pub async fn get_requirements(
     Path((document, revision)): Path<(String, String)>,
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<Requirement>>, ApiError> {
-    let key = parse_document_key(&document, &revision)?;
+    let key = parse_nist_document_key(&document, &revision)?;
     let doc = state.get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
@@ -335,7 +342,7 @@ pub async fn get_security_requirements(
     Path((document, revision)): Path<(String, String)>,
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<SecurityRequirement>>, ApiError> {
-    let key = parse_document_key(&document, &revision)?;
+    let key = parse_nist_document_key(&document, &revision)?;
     let doc = state.get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
@@ -373,7 +380,7 @@ pub async fn get_relationships(
     Path((document, revision)): Path<(String, String)>,
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<Relationship>>, ApiError> {
-    let key = parse_document_key(&document, &revision)?;
+    let key = parse_nist_document_key(&document, &revision)?;
     let doc = state.get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
@@ -405,7 +412,7 @@ pub async fn get_element_relationships(
     Path((document, revision, id)): Path<(String, String, String)>,
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<Relationship>>, ApiError> {
-    let key = parse_document_key(&document, &revision)?;
+    let key = parse_nist_document_key(&document, &revision)?;
     let doc = state.get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
