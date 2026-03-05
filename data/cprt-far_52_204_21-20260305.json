@@ -1,0 +1,462 @@
+{
+  "response": {
+    "requestType": 4,
+    "elements": {
+      "documents": [
+        {
+          "doc_identifier": "FAR_52_204_21",
+          "name": "FAR 52.204-21 - Basic Safeguarding of Covered Contractor Information Systems",
+          "version": "2.0",
+          "website": "https://www.acquisition.gov/far/52.204-21"
+        }
+      ],
+      "relationship_types": [
+        {
+          "relationship_identifier": "belongs_to",
+          "description": "Indicates that an element belongs to a parent element"
+        },
+        {
+          "relationship_identifier": "maps_to",
+          "description": "Maps to a related NIST SP 800-171 requirement"
+        }
+      ],
+      "elements": [
+        {
+          "element_type": "family",
+          "element_identifier": "AC",
+          "title": "Access Control",
+          "text": "",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "family",
+          "element_identifier": "IA",
+          "title": "Identification and Authentication",
+          "text": "",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "family",
+          "element_identifier": "MP",
+          "title": "Media Protection",
+          "text": "",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "family",
+          "element_identifier": "PE",
+          "title": "Physical Protection",
+          "text": "",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "family",
+          "element_identifier": "SC",
+          "title": "System and Communications Protection",
+          "text": "",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "family",
+          "element_identifier": "SI",
+          "title": "System and Information Integrity",
+          "text": "",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "AC.L1-3.1.1",
+          "title": "Authorized Access Control",
+          "text": "Limit information system access to authorized users, processes acting on behalf of authorized users, or devices (including other information systems).",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "AC.L1-3.1.2",
+          "title": "Transaction and Function Control",
+          "text": "Limit information system access to the types of transactions and functions that authorized users are permitted to execute.",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "AC.L1-3.1.20",
+          "title": "External Connections",
+          "text": "Verify and control/limit connections to and use of external information systems.",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "AC.L1-3.1.22",
+          "title": "Control Public Information",
+          "text": "Control information posted or processed on publicly accessible information systems.",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "IA.L1-3.5.1",
+          "title": "Identification",
+          "text": "Identify information system users, processes acting on behalf of users, or devices.",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "IA.L1-3.5.2",
+          "title": "Authentication",
+          "text": "Authenticate (or verify) the identities of those users, processes, or devices, as a prerequisite to allowing access to organizational information systems.",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "MP.L1-3.8.3",
+          "title": "Media Disposal",
+          "text": "Sanitize or destroy information system media containing Federal Contract Information before disposal or release for reuse.",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "PE.L1-3.10.1",
+          "title": "Limit Physical Access",
+          "text": "Limit physical access to organizational information systems, equipment, and the respective operating environments to authorized individuals.",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "PE.L1-3.10.3",
+          "title": "Escort Visitors",
+          "text": "Escort visitors and monitor visitor activity.",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "PE.L1-3.10.4",
+          "title": "Physical Access Logs",
+          "text": "Maintain audit logs of physical access.",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "PE.L1-3.10.5",
+          "title": "Manage Physical Access",
+          "text": "Control and manage physical access devices.",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "SC.L1-3.13.1",
+          "title": "Boundary Protection",
+          "text": "Monitor, control, and protect organizational communications (i.e., information transmitted or received by organizational information systems) at the external boundaries and key internal boundaries of the information systems.",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "SC.L1-3.13.5",
+          "title": "Public-Access System Separation",
+          "text": "Implement subnetworks for publicly accessible system components that are physically or logically separated from internal networks.",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "SI.L1-3.14.1",
+          "title": "Flaw Remediation",
+          "text": "Identify, report, and correct information and information system flaws in a timely manner.",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "SI.L1-3.14.2",
+          "title": "Malicious Code Protection",
+          "text": "Provide protection from malicious code at appropriate locations within organizational information systems.",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "SI.L1-3.14.4",
+          "title": "Update Malicious Code Protection",
+          "text": "Update malicious code protection mechanisms when new releases are available.",
+          "doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "element_type": "requirement",
+          "element_identifier": "SI.L1-3.14.5",
+          "title": "System and File Scanning",
+          "text": "Perform periodic scans of the information system and real-time scans of files from external sources as files are downloaded, opened, or executed.",
+          "doc_identifier": "FAR_52_204_21"
+        }
+      ],
+      "relationships": [
+        {
+          "source_element_identifier": "AC.L1-3.1.1",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "AC",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "AC.L1-3.1.2",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "AC",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "AC.L1-3.1.20",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "AC",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "AC.L1-3.1.22",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "AC",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "IA.L1-3.5.1",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "IA",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "IA.L1-3.5.2",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "IA",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "MP.L1-3.8.3",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "MP",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "PE.L1-3.10.1",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "PE",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "PE.L1-3.10.3",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "PE",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "PE.L1-3.10.4",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "PE",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "PE.L1-3.10.5",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "PE",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "SC.L1-3.13.1",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "SC",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "SC.L1-3.13.5",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "SC",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "SI.L1-3.14.1",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "SI",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "SI.L1-3.14.2",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "SI",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "SI.L1-3.14.4",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "SI",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "SI.L1-3.14.5",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "SI",
+          "dest_doc_identifier": "FAR_52_204_21",
+          "relationship_identifier": "belongs_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "AC.L1-3.1.1",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.1.1",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "AC.L1-3.1.2",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.1.2",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "AC.L1-3.1.20",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.1.20",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "AC.L1-3.1.22",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.1.22",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "IA.L1-3.5.1",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.5.1",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "IA.L1-3.5.2",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.5.2",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "MP.L1-3.8.3",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.8.3",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "PE.L1-3.10.1",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.10.1",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "PE.L1-3.10.3",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.10.3",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "PE.L1-3.10.4",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.10.4",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "PE.L1-3.10.5",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.10.5",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "SC.L1-3.13.1",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.13.1",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "SC.L1-3.13.5",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.13.5",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "SI.L1-3.14.1",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.14.1",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "SI.L1-3.14.2",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.14.2",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "SI.L1-3.14.4",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.14.4",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        },
+        {
+          "source_element_identifier": "SI.L1-3.14.5",
+          "source_doc_identifier": "FAR_52_204_21",
+          "dest_element_identifier": "3.14.5",
+          "dest_doc_identifier": "SP_800_171_2_0_0",
+          "relationship_identifier": "maps_to",
+          "provenance_doc_identifier": "FAR_52_204_21"
+        }
+      ]
+    }
+  }
+}

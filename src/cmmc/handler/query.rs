@@ -2,33 +2,59 @@
 
 use serde::Deserialize;
 
-use crate::cmmc::model::{ElementType, NistDocument, NistDocumentKey, NistRevision};
+use crate::cmmc::model::{ElementType, NistDocument, FarDocument, DocumentKey, DocumentRevision};
 use crate::handler::error::ApiError;
 
-/// Parse document and revision path segments into a `NistDocumentKey`
-pub fn parse_document_key(document: &str, revision: &str) -> Result<NistDocumentKey, ApiError> {
+/// Parse NIST document and revision path segments into a `DocumentKey`
+pub fn parse_nist_document_key(document: &str, revision: &str) -> Result<DocumentKey, ApiError> {
     let doc = document
         .parse::<NistDocument>()
         .map_err(|e| ApiError::BadRequest(e))?;
     let rev = revision
-        .parse::<NistRevision>()
+        .parse::<DocumentRevision>()
         .map_err(|e| ApiError::BadRequest(e))?;
 
     match (doc, rev) {
-        (NistDocument::Sp800171, NistRevision::V1) => {
+        (NistDocument::Sp800171, DocumentRevision::V1 | DocumentRevision::V2) => {
             return Err(ApiError::BadRequest(
                 "SP 800-171 uses revisions, not versions. Use r2 or r3 (e.g. /sp800-171/r3).".to_string(),
             ));
         }
-        (NistDocument::Sp800172, NistRevision::Rev2 | NistRevision::Rev3) => {
+        (NistDocument::Sp800172, DocumentRevision::Rev2 | DocumentRevision::Rev3) => {
             return Err(ApiError::BadRequest(
                 "SP 800-172 uses versions, not revisions. Use v1 (e.g. /sp800-172/v1).".to_string(),
+            ));
+        }
+        (NistDocument::Sp800172A, DocumentRevision::Rev2 | DocumentRevision::Rev3) => {
+            return Err(ApiError::BadRequest(
+                "SP 800-172A uses versions, not revisions. Use v1 (e.g. /sp800-172a/v1).".to_string(),
             ));
         }
         _ => {}
     }
 
-    Ok(NistDocumentKey::new(doc, rev))
+    Ok(DocumentKey::nist(doc, rev))
+}
+
+/// Parse FAR document and revision path segments into a `DocumentKey`
+pub fn parse_far_document_key(document: &str, revision: &str) -> Result<DocumentKey, ApiError> {
+    let doc = document
+        .parse::<FarDocument>()
+        .map_err(|e| ApiError::BadRequest(e))?;
+    let rev = revision
+        .parse::<DocumentRevision>()
+        .map_err(|e| ApiError::BadRequest(e))?;
+
+    match (doc, rev) {
+        (FarDocument::Far52_204_21, DocumentRevision::Rev2 | DocumentRevision::Rev3 | DocumentRevision::V1) => {
+            return Err(ApiError::BadRequest(
+                "FAR 52.204-21 uses v2 (e.g. /far/52.204-21/v2).".to_string(),
+            ));
+        }
+        _ => {}
+    }
+
+    Ok(DocumentKey::far(doc, rev))
 }
 
 /// Query parameters for filtering elements with pagination
