@@ -15,8 +15,8 @@ pub const      NIST_RELATIONSHIPS_ENDPOINT: &str = "/v1/nist/:document/:revision
 pub const  NIST_ELEMENT_RELATIONS_ENDPOINT: &str = "/v1/nist/:document/:revision/elements/:id/relationships";
 
 // POA&M validation endpoints
-pub const      POAM_VALIDATE_REQ_ENDPOINT: &str = "/v1/nist/:document/:revision/poam/validate/:requirement_id";
-pub const    POAM_VALIDATE_BATCH_ENDPOINT: &str = "/v1/nist/:document/:revision/poam/validate";
+pub const       POAM_VALIDATE_REQ_ENDPOINT: &str = "/v1/nist/:document/:revision/poam/validate/:requirement_id";
+pub const     POAM_VALIDATE_BATCH_ENDPOINT: &str = "/v1/nist/:document/:revision/poam/validate";
 pub const  POAM_NON_ELIGIBLE_REQS_ENDPOINT: &str = "/v1/nist/:document/:revision/poam/non-eligible";
 
 // FAR API endpoints with :document and :revision parameters
