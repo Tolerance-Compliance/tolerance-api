@@ -1,8 +1,7 @@
-//! HTTP request handlers for the NIST and FAR APIs
-
 pub mod query;
 pub mod nist;
 pub mod far;
+pub mod poam;
 
 pub use nist::{
     get_documents,
@@ -25,5 +24,10 @@ pub use far::{
     get_requirements          as get_far_requirements,
     get_relationships         as get_far_relationships,
     get_element_relationships as get_far_element_relationships,
+};
+pub use poam::{
+    validate_poam_requirement,
+    validate_poam_batch,
+    get_non_eligible_requirements,
 };
 pub use query::ElementQuery;

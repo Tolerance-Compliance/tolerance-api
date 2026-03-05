@@ -23,6 +23,10 @@ use crate::constant::OPENAPI_CACHE_DURATION;
         crate::cmmc::handler::nist::get_security_requirements,
         crate::cmmc::handler::nist::get_relationships,
         crate::cmmc::handler::nist::get_element_relationships,
+        // POA&M validation endpoints
+        crate::cmmc::handler::poam::validate_poam_requirement,
+        crate::cmmc::handler::poam::validate_poam_batch,
+        crate::cmmc::handler::poam::get_non_eligible_requirements,
         // FAR endpoints
         crate::cmmc::handler::far::get_summary,
         crate::cmmc::handler::far::get_families,
@@ -52,11 +56,22 @@ use crate::constant::OPENAPI_CACHE_DURATION;
             crate::cmmc::model::NistDocumentKey,
             crate::cmmc::model::DocumentKey,
             crate::cmmc::handler::nist::DocumentInfo,
+            // Scoring and POA&M types
+            crate::cmmc::scoring::RequirementScore,
+            crate::cmmc::scoring::CmmcLevel,
+            crate::cmmc::scoring::Priority,
+            crate::cmmc::poam::PoamValidation,
+            crate::cmmc::poam::PoamEligibility,
+            crate::cmmc::poam::IneligibilityReason,
+            crate::cmmc::poam::PoamCondition,
+            crate::cmmc::handler::poam::BatchValidationRequest,
+            crate::cmmc::handler::poam::BatchValidationResponse,
         )
     ),
     tags(
         (name = "Health", description = "Health check endpoint"),
         (name = "NIST",   description = "NIST SP 800-171, 800-171A, 800-172 & 800-172A API"),
+        (name = "POA&M",  description = "Plan of Action & Milestones validation API"),
         (name = "FAR",    description = "Federal Acquisition Regulation (FAR) documents API"),
     ),
     info(
@@ -86,8 +101,6 @@ The `/v1/far/:document/:revision/*` endpoints support:
 | Document     | Revision | Description                                                    |
 |--------------|----------|----------------------------------------------------------------|
 | `52.204-21`  | `v2`     | Basic Safeguarding of Covered Contractor Information Systems (CMMC Level 1). |
-
-Example: `/v1/far/52.204-21/v2/families`
 
 ## Assessment Guide Element Types (171A / 172A)
 

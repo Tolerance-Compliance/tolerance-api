@@ -6,6 +6,8 @@ pub mod index;
 pub mod state;
 pub mod handler;
 pub mod format_response;
+pub mod scoring;
+pub mod poam;
 
 // Re-export commonly used types
 pub use state::CmmcState;
@@ -18,3 +20,5 @@ pub use model::{
 };
 pub use response::{Family, Requirement, SecurityRequirement, PaginatedResponse, DataSummary};
 pub use index::SearchIndex;
+pub use scoring::{ScoringDatabase, RequirementScore, CmmcLevel, Priority};
+pub use poam::{PoamValidator, PoamValidation, PoamEligibility};

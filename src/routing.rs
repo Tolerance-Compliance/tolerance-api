@@ -1,6 +1,6 @@
 //! HTTP routing configuration
 
-use axum::{routing::get, Router};
+use axum::{routing::{get, post}, Router};
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 
@@ -12,6 +12,7 @@ use crate::cmmc::handler::{
     get_far_element, get_far_element_relationships, get_far_elements,
     get_far_families, get_far_family, get_far_relationships, get_far_requirements,
     get_far_summary,
+    validate_poam_requirement, validate_poam_batch, get_non_eligible_requirements,
 };
 use crate::cmmc::CmmcState;
 use crate::constant::{
@@ -20,6 +21,7 @@ use crate::constant::{
     NIST_ELEMENTS_ENDPOINT, NIST_FAMILIES_ENDPOINT, NIST_FAMILY_ENDPOINT,
     NIST_RELATIONSHIPS_ENDPOINT, NIST_REQUIREMENTS_ENDPOINT, NIST_SECURITY_REQS_ENDPOINT,
     NIST_SUMMARY_ENDPOINT,
+    POAM_VALIDATE_REQ_ENDPOINT, POAM_VALIDATE_BATCH_ENDPOINT, POAM_NON_ELIGIBLE_REQS_ENDPOINT,
     FAR_ELEMENT_ENDPOINT, FAR_ELEMENT_RELATIONS_ENDPOINT,
     FAR_ELEMENTS_ENDPOINT, FAR_FAMILIES_ENDPOINT, FAR_FAMILY_ENDPOINT,
     FAR_RELATIONSHIPS_ENDPOINT, FAR_REQUIREMENTS_ENDPOINT, FAR_SUMMARY_ENDPOINT,
@@ -55,6 +57,10 @@ pub fn app(state: CmmcState) -> Router {
         .route(NIST_SECURITY_REQS_ENDPOINT,     get(get_nist_security_requirements))
         .route(NIST_RELATIONSHIPS_ENDPOINT,     get(get_nist_relationships))
         .route(NIST_ELEMENT_RELATIONS_ENDPOINT, get(get_nist_element_relationships))
+        // POA&M validation API
+        .route(POAM_VALIDATE_REQ_ENDPOINT,      get(validate_poam_requirement))
+        .route(POAM_VALIDATE_BATCH_ENDPOINT,    post(validate_poam_batch))
+        .route(POAM_NON_ELIGIBLE_REQS_ENDPOINT, get(get_non_eligible_requirements))
         // FAR API
         .route(FAR_SUMMARY_ENDPOINT,            get(get_far_summary))
         .route(FAR_FAMILIES_ENDPOINT,           get(get_far_families))

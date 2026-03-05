@@ -3,6 +3,8 @@ use std::sync::Arc;
 
 use super::index::SearchIndex;
 use super::model::{Document, Element, NistData, DocumentKey, Relationship};
+use super::scoring::ScoringDatabase;
+use super::poam::PoamValidator;
 
 /// Convenience view over a single loaded document.
 ///
@@ -30,6 +32,8 @@ struct DocumentData {
 #[derive(Clone)]
 pub struct CmmcState {
     documents: Arc<HashMap<DocumentKey, DocumentData>>,
+    scoring_db: Arc<ScoringDatabase>,
+    poam_validator: Arc<PoamValidator>,
 }
 
 impl CmmcState {
@@ -40,8 +44,12 @@ impl CmmcState {
             let index = SearchIndex::build(&data.response.elements.elements);
             documents.insert(key, DocumentData { data, index });
         }
+        let scoring_db = Arc::new(ScoringDatabase::new());
+        let poam_validator = Arc::new(PoamValidator::new(ScoringDatabase::new()));
         Self {
             documents: Arc::new(documents),
+            scoring_db,
+            poam_validator,
         }
     }
 
@@ -74,5 +82,15 @@ impl CmmcState {
         self.documents
             .get(&key)
             .and_then(|dd| dd.data.response.elements.elements.get(idx))
+    }
+
+    /// Get the scoring database
+    pub fn scoring_db(&self) -> &ScoringDatabase {
+        &self.scoring_db
+    }
+
+    /// Get the POA&M validator
+    pub fn poam_validator(&self) -> &PoamValidator {
+        &self.poam_validator
     }
 }

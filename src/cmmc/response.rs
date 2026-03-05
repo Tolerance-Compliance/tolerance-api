@@ -2,6 +2,8 @@ use serde::Serialize;
 use utoipa::ToSchema;
 
 use super::model::Document;
+use super::scoring::RequirementScore;
+use super::poam::PoamValidation;
 
 /// A family with its nested requirements (API response)
 #[derive(Debug, Clone, Serialize, ToSchema)]
@@ -18,6 +20,12 @@ pub struct Requirement {
     pub title: String,
     pub text: String,
     pub security_requirements: Vec<SecurityRequirement>,
+    /// CMMC scoring information (if available)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub score: Option<RequirementScore>,
+    /// POA&M eligibility validation (if available)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub poam_validation: Option<PoamValidation>,
 }
 
 /// A security requirement with discussion and assessment (API response)
@@ -28,6 +36,12 @@ pub struct SecurityRequirement {
     pub text: String,
     pub discussion: Option<String>,
     pub assessment: Option<String>,
+    /// CMMC scoring information (if available)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub score: Option<RequirementScore>,
+    /// POA&M eligibility validation (if available)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub poam_validation: Option<PoamValidation>,
 }
 
 /// Summary statistics for the dataset

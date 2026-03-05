@@ -1,0 +1,778 @@
+{
+  "version": "CMMC 2.0",
+  "last_updated": "2026-03-05",
+  "description": "CMMC scoring mappings for NIST SP 800-171 Rev 3 requirements",
+  "source": "CMMC 2.0 Final Rule - https://www.acq.osd.mil/cmmc/",
+  "requirements": {
+    "03.01.01": {
+      "cmmc_level": 1,
+      "point_value": 3,
+      "is_foundational": true,
+      "priority": "High",
+      "notes": "Account Management - CMMC Level 1 foundational practice"
+    },
+    "03.01.02": {
+      "cmmc_level": 1,
+      "point_value": 3,
+      "is_foundational": true,
+      "priority": "High",
+      "notes": "Access Enforcement - CMMC Level 1 foundational practice"
+    },
+    "03.01.05": {
+      "cmmc_level": 1,
+      "point_value": 2,
+      "is_foundational": true,
+      "priority": "High",
+      "notes": "Separation of Duties - CMMC Level 1 foundational practice"
+    },
+    "03.01.22": {
+      "cmmc_level": 1,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Control Public Information - CMMC Level 1 practice"
+    },
+    "03.05.01": {
+      "cmmc_level": 1,
+      "point_value": 3,
+      "is_foundational": true,
+      "priority": "High",
+      "notes": "Identification - CMMC Level 1 foundational practice"
+    },
+    "03.05.02": {
+      "cmmc_level": 1,
+      "point_value": 3,
+      "is_foundational": true,
+      "priority": "High",
+      "notes": "Authentication - CMMC Level 1 foundational practice"
+    },
+    "03.08.03": {
+      "cmmc_level": 1,
+      "point_value": 2,
+      "is_foundational": true,
+      "priority": "High",
+      "notes": "Media Disposal - CMMC Level 1 foundational practice"
+    },
+    "03.10.01": {
+      "cmmc_level": 1,
+      "point_value": 2,
+      "is_foundational": true,
+      "priority": "Medium",
+      "notes": "Physical Access Authorizations - CMMC Level 1 foundational practice"
+    },
+    "03.10.03": {
+      "cmmc_level": 1,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Escort Visitors - CMMC Level 1 practice"
+    },
+    "03.10.04": {
+      "cmmc_level": 1,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Physical Access Logs - CMMC Level 1 practice"
+    },
+    "03.10.05": {
+      "cmmc_level": 1,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Manage Physical Access - CMMC Level 1 practice"
+    },
+    "03.13.01": {
+      "cmmc_level": 1,
+      "point_value": 3,
+      "is_foundational": true,
+      "priority": "High",
+      "notes": "Boundary Protection - CMMC Level 1 foundational practice"
+    },
+    "03.13.05": {
+      "cmmc_level": 1,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Public-Access System Separation - CMMC Level 1 practice"
+    },
+    "03.13.11": {
+      "cmmc_level": 1,
+      "point_value": 3,
+      "is_foundational": true,
+      "priority": "High",
+      "notes": "Cryptographic Protection - CMMC Level 1 foundational practice"
+    },
+    "03.14.01": {
+      "cmmc_level": 1,
+      "point_value": 3,
+      "is_foundational": true,
+      "priority": "High",
+      "notes": "Flaw Remediation - CMMC Level 1 foundational practice"
+    },
+    "03.14.02": {
+      "cmmc_level": 1,
+      "point_value": 3,
+      "is_foundational": true,
+      "priority": "High",
+      "notes": "Malicious Code Protection - CMMC Level 1 foundational practice"
+    },
+    "03.14.06": {
+      "cmmc_level": 1,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Network and System Monitoring - CMMC Level 1 practice"
+    },
+    "03.01.03": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "High",
+      "notes": "Information Flow Enforcement - CMMC Level 2"
+    },
+    "03.01.04": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Separation of Duties - CMMC Level 2"
+    },
+    "03.01.06": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Least Privilege - CMMC Level 2"
+    },
+    "03.01.07": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Non-Privileged Account Use - CMMC Level 2"
+    },
+    "03.01.08": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Privileged Functions - CMMC Level 2"
+    },
+    "03.01.09": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Unsuccessful Logon Attempts - CMMC Level 2"
+    },
+    "03.01.10": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Session Lock - CMMC Level 2"
+    },
+    "03.01.11": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Session Termination - CMMC Level 2"
+    },
+    "03.01.12": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Control Remote Access - CMMC Level 2"
+    },
+    "03.01.13": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Remote Access Confidentiality - CMMC Level 2"
+    },
+    "03.01.14": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Remote Access Routing - CMMC Level 2"
+    },
+    "03.01.15": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Privileged Remote Access - CMMC Level 2"
+    },
+    "03.01.16": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Wireless Access Authorization - CMMC Level 2"
+    },
+    "03.01.17": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Wireless Access Protection - CMMC Level 2"
+    },
+    "03.01.18": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Mobile Device Connection - CMMC Level 2"
+    },
+    "03.01.19": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Encrypt CUI on Mobile - CMMC Level 2"
+    },
+    "03.01.20": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "External Connections - CMMC Level 2"
+    },
+    "03.01.21": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Portable Storage Use - CMMC Level 2"
+    },
+    "03.02.01": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "High",
+      "notes": "Security Awareness - CMMC Level 2"
+    },
+    "03.02.02": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Insider Threat Awareness - CMMC Level 2"
+    },
+    "03.02.03": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Security Training Records - CMMC Level 2"
+    },
+    "03.03.01": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "High",
+      "notes": "System Audit Logging - CMMC Level 2"
+    },
+    "03.03.02": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "High",
+      "notes": "User Accountability - CMMC Level 2"
+    },
+    "03.03.03": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "High",
+      "notes": "Audit Review and Reporting - CMMC Level 2"
+    },
+    "03.03.04": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Audit Log Retention - CMMC Level 2"
+    },
+    "03.03.05": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Audit Reduction - CMMC Level 2"
+    },
+    "03.03.06": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Audit Record Protection - CMMC Level 2"
+    },
+    "03.03.07": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Audit Monitoring - CMMC Level 2"
+    },
+    "03.03.08": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Time Stamps - CMMC Level 2"
+    },
+    "03.03.09": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Protection of Audit Information - CMMC Level 2"
+    },
+    "03.04.01": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "High",
+      "notes": "Baseline Configurations - CMMC Level 2"
+    },
+    "03.04.02": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "High",
+      "notes": "Configuration Change Control - CMMC Level 2"
+    },
+    "03.04.03": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Least Functionality - CMMC Level 2"
+    },
+    "03.04.04": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Unauthorized Software - CMMC Level 2"
+    },
+    "03.04.05": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "User-Installed Software - CMMC Level 2"
+    },
+    "03.04.06": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Software Usage Restrictions - CMMC Level 2"
+    },
+    "03.04.07": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Nonessential Programs - CMMC Level 2"
+    },
+    "03.04.08": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Application Execution Policy - CMMC Level 2"
+    },
+    "03.04.09": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Configuration Management Plan - CMMC Level 2"
+    },
+    "03.05.03": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "High",
+      "notes": "Multifactor Authentication - CMMC Level 2"
+    },
+    "03.05.04": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "High",
+      "notes": "Replay-Resistant Authentication - CMMC Level 2"
+    },
+    "03.05.05": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Identifier Management - CMMC Level 2"
+    },
+    "03.05.06": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Authenticator Management - CMMC Level 2"
+    },
+    "03.05.07": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Password Complexity - CMMC Level 2"
+    },
+    "03.05.08": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Password Reuse - CMMC Level 2"
+    },
+    "03.05.09": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Temporary Passwords - CMMC Level 2"
+    },
+    "03.05.10": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Cryptographic Protection of Passwords - CMMC Level 2"
+    },
+    "03.05.11": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Obscure Feedback - CMMC Level 2"
+    },
+    "03.06.01": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "High",
+      "notes": "Incident Handling - CMMC Level 2"
+    },
+    "03.06.02": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "High",
+      "notes": "Incident Reporting - CMMC Level 2"
+    },
+    "03.06.03": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Incident Response Testing - CMMC Level 2"
+    },
+    "03.07.01": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Maintenance - CMMC Level 2"
+    },
+    "03.07.02": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Controlled Maintenance - CMMC Level 2"
+    },
+    "03.07.03": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Maintenance Tools - CMMC Level 2"
+    },
+    "03.07.04": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Nonlocal Maintenance - CMMC Level 2"
+    },
+    "03.07.05": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Maintenance Personnel - CMMC Level 2"
+    },
+    "03.07.06": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Timely Maintenance - CMMC Level 2"
+    },
+    "03.08.01": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Media Protection - CMMC Level 2"
+    },
+    "03.08.02": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Media Access - CMMC Level 2"
+    },
+    "03.08.04": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Media Marking - CMMC Level 2"
+    },
+    "03.08.05": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Media Accountability - CMMC Level 2"
+    },
+    "03.08.06": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Media Transport - CMMC Level 2"
+    },
+    "03.08.07": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Media Sanitization - CMMC Level 2"
+    },
+    "03.08.08": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Media Use - CMMC Level 2"
+    },
+    "03.08.09": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Protect Backups - CMMC Level 2"
+    },
+    "03.09.01": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Personnel Screening - CMMC Level 2"
+    },
+    "03.09.02": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Personnel Termination - CMMC Level 2"
+    },
+    "03.10.02": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Physical Access Control - CMMC Level 2"
+    },
+    "03.10.06": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Alternate Work Sites - CMMC Level 2"
+    },
+    "03.11.01": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "High",
+      "notes": "Risk Assessment - CMMC Level 2"
+    },
+    "03.11.02": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "High",
+      "notes": "Vulnerability Scanning - CMMC Level 2"
+    },
+    "03.11.03": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Vulnerability Remediation - CMMC Level 2"
+    },
+    "03.12.01": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "High",
+      "notes": "Security Assessments - CMMC Level 2"
+    },
+    "03.12.02": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "High",
+      "notes": "Plan of Action - CMMC Level 2"
+    },
+    "03.12.03": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Security Monitoring - CMMC Level 2"
+    },
+    "03.12.04": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Malicious Code Analysis - CMMC Level 2"
+    },
+    "03.13.02": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "High",
+      "notes": "Security Engineering - CMMC Level 2"
+    },
+    "03.13.03": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Security Function Isolation - CMMC Level 2"
+    },
+    "03.13.04": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Deny by Default - CMMC Level 2"
+    },
+    "03.13.06": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Network Segmentation - CMMC Level 2"
+    },
+    "03.13.07": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Split Tunneling - CMMC Level 2"
+    },
+    "03.13.08": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Transmission Confidentiality - CMMC Level 2"
+    },
+    "03.13.09": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Transmission Integrity - CMMC Level 2"
+    },
+    "03.13.10": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Cryptographic Key Management - CMMC Level 2"
+    },
+    "03.13.12": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Collaborative Computing - CMMC Level 2"
+    },
+    "03.13.13": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Mobile Code - CMMC Level 2"
+    },
+    "03.13.14": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Voice over IP - CMMC Level 2"
+    },
+    "03.13.15": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Protect Authenticity - CMMC Level 2"
+    },
+    "03.13.16": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Protect CUI at Rest - CMMC Level 2"
+    },
+    "03.14.03": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Security Alerts and Advisories - CMMC Level 2"
+    },
+    "03.14.04": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Malicious Code Updates - CMMC Level 2"
+    },
+    "03.14.05": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "System and File Scanning - CMMC Level 2"
+    },
+    "03.14.07": {
+      "cmmc_level": 2,
+      "point_value": 2,
+      "is_foundational": false,
+      "priority": "Medium",
+      "notes": "Spam Protection - CMMC Level 2"
+    }
+  }
+}

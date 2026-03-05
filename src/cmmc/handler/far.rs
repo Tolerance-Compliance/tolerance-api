@@ -82,7 +82,7 @@ pub async fn get_families(
         .get_by_type(crate::cmmc::model::ElementType::Family)
         .iter()
         .filter_map(|&idx| doc.elements.get(idx))
-        .map(|family| build_family(family, doc.elements))
+        .map(|family| build_family(family, doc.elements, state.scoring_db(), state.poam_validator()))
         .collect();
 
     Ok(FormatResponse::with_format(families, wants_toon(&headers)))
@@ -122,7 +122,10 @@ pub async fn get_family(
         .filter(|e| e.element_type == crate::cmmc::model::ElementType::Family)
         .ok_or_else(|| ApiError::NotFound(format!("Family '{}' not found", id)))?;
 
-    Ok(FormatResponse::with_format(build_family(family, doc.elements), wants_toon(&headers)))
+    Ok(FormatResponse::with_format(
+        build_family(family, doc.elements, state.scoring_db(), state.poam_validator()),
+        wants_toon(&headers)
+    ))
 }
 
 /// Get all elements.
@@ -238,7 +241,7 @@ pub async fn get_requirements(
         .get_by_type(crate::cmmc::model::ElementType::Requirement)
         .iter()
         .filter_map(|&idx| doc.elements.get(idx))
-        .map(|req| build_requirement(req, doc.elements))
+        .map(|req| build_requirement(req, doc.elements, state.scoring_db(), state.poam_validator()))
         .collect();
 
     Ok(FormatResponse::with_format(requirements, wants_toon(&headers)))

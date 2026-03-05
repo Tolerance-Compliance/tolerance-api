@@ -140,7 +140,7 @@ pub async fn get_families(
         .get_by_type(ElementType::Family)
         .iter()
         .filter_map(|&idx| doc.elements.get(idx))
-        .map(|family| build_family(family, doc.elements))
+        .map(|family| build_family(family, doc.elements, state.scoring_db(), state.poam_validator()))
         .collect();
 
     Ok(FormatResponse::with_format(families, wants_toon(&headers)))
@@ -184,7 +184,10 @@ pub async fn get_family(
         .filter(|e| e.element_type == ElementType::Family)
         .ok_or_else(|| ApiError::NotFound(format!("Family '{}' not found", id)))?;
 
-    Ok(FormatResponse::with_format(build_family(family, doc.elements), wants_toon(&headers)))
+    Ok(FormatResponse::with_format(
+        build_family(family, doc.elements, state.scoring_db(), state.poam_validator()),
+        wants_toon(&headers)
+    ))
 }
 
 /// Get all elements.
@@ -312,7 +315,7 @@ pub async fn get_requirements(
         .get_by_type(ElementType::Requirement)
         .iter()
         .filter_map(|&idx| doc.elements.get(idx))
-        .map(|req| build_requirement(req, doc.elements))
+        .map(|req| build_requirement(req, doc.elements, state.scoring_db(), state.poam_validator()))
         .collect();
 
     Ok(FormatResponse::with_format(requirements, wants_toon(&headers)))
@@ -350,7 +353,7 @@ pub async fn get_security_requirements(
         .get_by_type(ElementType::SecurityRequirement)
         .iter()
         .filter_map(|&idx| doc.elements.get(idx))
-        .map(|sr| build_security_requirement(sr, doc.elements))
+        .map(|sr| build_security_requirement(sr, doc.elements, state.scoring_db(), state.poam_validator()))
         .collect();
 
     Ok(FormatResponse::with_format(security_requirements, wants_toon(&headers)))
@@ -432,48 +435,92 @@ pub async fn get_element_relationships(
 // These are `pub(crate)` so the legacy CMMC handlers in families.rs can reuse
 // them without duplicating the logic.
 
-pub(crate) fn build_family(family: &Element, elements: &[Element]) -> Family {
+use crate::cmmc::scoring::ScoringDatabase;
+use crate::cmmc::poam::PoamValidator;
+
+pub(crate) fn build_family(
+    family: &Element,
+    elements: &[Element],
+    scoring_db: &ScoringDatabase,
+    poam_validator: &PoamValidator,
+) -> Family {
     Family {
         identifier: family.element_identifier.clone(),
         title:      family.title.clone(),
-        requirements: get_family_requirements(family, elements),
+        requirements: get_family_requirements(family, elements, scoring_db, poam_validator),
     }
 }
 
-fn get_family_requirements(family: &Element, elements: &[Element]) -> Vec<Requirement> {
+fn get_family_requirements(
+    family: &Element,
+    elements: &[Element],
+    scoring_db: &ScoringDatabase,
+    poam_validator: &PoamValidator,
+) -> Vec<Requirement> {
     let prefix = format!("{}.", family.element_identifier);
     elements
         .iter()
         .filter(|e| e.element_type == ElementType::Requirement && e.element_identifier.starts_with(&prefix))
-        .map(|req| build_requirement(req, elements))
+        .map(|req| build_requirement(req, elements, scoring_db, poam_validator))
         .collect()
 }
 
-pub(crate) fn build_requirement(req: &Element, elements: &[Element]) -> Requirement {
+pub(crate) fn build_requirement(
+    req: &Element,
+    elements: &[Element],
+    scoring_db: &ScoringDatabase,
+    poam_validator: &PoamValidator,
+) -> Requirement {
+    let score = scoring_db.get_score(&req.element_identifier).cloned();
+    let poam_validation = Some(poam_validator.validate(&req.element_identifier));
+    
     Requirement {
         identifier:           req.element_identifier.clone(),
         title:                req.title.clone(),
         text:                 req.text.clone(),
-        security_requirements: get_security_requirements_for(req, elements),
+        security_requirements: get_security_requirements_for(req, elements, scoring_db, poam_validator),
+        score,
+        poam_validation,
     }
 }
 
-fn get_security_requirements_for(req: &Element, elements: &[Element]) -> Vec<SecurityRequirement> {
+fn get_security_requirements_for(
+    req: &Element,
+    elements: &[Element],
+    scoring_db: &ScoringDatabase,
+    poam_validator: &PoamValidator,
+) -> Vec<SecurityRequirement> {
     let prefix = format!("SR-{}", req.element_identifier);
     elements
         .iter()
         .filter(|e| e.element_type == ElementType::SecurityRequirement && e.element_identifier.starts_with(&prefix))
-        .map(|sr| build_security_requirement(sr, elements))
+        .map(|sr| build_security_requirement(sr, elements, scoring_db, poam_validator))
         .collect()
 }
 
-pub(crate) fn build_security_requirement(sr: &Element, elements: &[Element]) -> SecurityRequirement {
+pub(crate) fn build_security_requirement(
+    sr: &Element,
+    elements: &[Element],
+    scoring_db: &ScoringDatabase,
+    poam_validator: &PoamValidator,
+) -> SecurityRequirement {
+    // For security requirements, we check if the parent requirement has scoring
+    // Security requirements inherit the parent requirement's score
+    let parent_id = extract_parent_requirement_id(&sr.element_identifier);
+    let score = parent_id
+        .as_ref()
+        .and_then(|id| scoring_db.get_score(id))
+        .cloned();
+    let poam_validation = parent_id.as_ref().map(|id| poam_validator.validate(id));
+    
     SecurityRequirement {
         identifier: sr.element_identifier.clone(),
         title:      sr.title.clone(),
         text:       sr.text.clone(),
         discussion: find_related_text(elements, &sr.element_identifier, ElementType::Discussion),
         assessment: find_related_text(elements, &sr.element_identifier, ElementType::Assessment),
+        score,
+        poam_validation,
     }
 }
 
@@ -483,4 +530,21 @@ fn find_related_text(elements: &[Element], id: &str, element_type: ElementType) 
         .find(|e| e.element_type == element_type && e.element_identifier == id)
         .map(|e| e.text.clone())
         .filter(|t| !t.is_empty())
+}
+
+/// Extract parent requirement ID from a security requirement identifier
+/// e.g., "SR-03.01.01.a" -> Some("03.01.01")
+fn extract_parent_requirement_id(sr_id: &str) -> Option<String> {
+    if let Some(stripped) = sr_id.strip_prefix("SR-") {
+        // Find the last dot and take everything before it, or the whole thing if no dot
+        let parts: Vec<&str> = stripped.split('.').collect();
+        if parts.len() >= 3 {
+            // Take first 3 parts (e.g., "03", "01", "01")
+            Some(format!("{}.{}.{}", parts[0], parts[1], parts[2]))
+        } else {
+            Some(stripped.to_string())
+        }
+    } else {
+        None
+    }
 }
