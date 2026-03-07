@@ -85,12 +85,12 @@ use crate::constant::OPENAPI_CACHE_DURATION;
 
 The `/v1/nist/:document/:revision/*` endpoints support:
 
-| Document     | Revision         | Description                                       |
-|--------------|------------------|---------------------------------------------------|
-| `sp800-171`  | `r2`, `r3`       | Security Requirements for CUI.                    |
-| `sp800-171a` | `r3`             | Assessing Security Requirements for CUI.          |
-| `sp800-172`  | `v1`             | Enhanced Security Requirements for CUI.           |
-| `sp800-172a` | `v1`             | Assessing Enhanced Security Requirements for CUI. |
+| Document     | Revision               | Description                                       |
+|--------------|------------------------|---------------------------------------------------|
+| `sp800-171`  | `r1`, `r2`, `r3`       | Security Requirements for CUI.                    |
+| `sp800-171a` | `v1`, `r3`             | Assessing Security Requirements for CUI.          |
+| `sp800-172`  | `v1`                   | Enhanced Security Requirements for CUI.           |
+| `sp800-172a` | `v1`                   | Assessing Enhanced Security Requirements for CUI. |
 
 Use `/v1/nist/documents` to discover all loaded NIST documents at runtime.
 
