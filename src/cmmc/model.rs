@@ -133,6 +133,8 @@ impl std::str::FromStr for FarDocument {
 /// Document revision/version
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 pub enum DocumentRevision {
+    #[serde(rename = "r1")]
+    Rev1,
     #[serde(rename = "r2")]
     Rev2,
     #[serde(rename = "r3")]
@@ -149,6 +151,7 @@ pub type NistRevision = DocumentRevision;
 impl DocumentRevision {
     pub fn as_str(&self) -> &'static str {
         match self {
+            DocumentRevision::Rev1 => "r1",
             DocumentRevision::Rev2 => "r2",
             DocumentRevision::Rev3 => "r3",
             DocumentRevision::V1   => "v1",
@@ -167,11 +170,12 @@ impl std::str::FromStr for DocumentRevision {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
+            "r1" | "rev1" | "1" => Ok(DocumentRevision::Rev1),
             "r2" | "rev2" | "2" => Ok(DocumentRevision::Rev2),
             "r3" | "rev3" | "3" => Ok(DocumentRevision::Rev3),
             "v1" | "1.0"        => Ok(DocumentRevision::V1),
             "v2" | "2.0"        => Ok(DocumentRevision::V2),
-            _ => Err(format!("Unknown revision: '{}'. Use 'r2', 'r3', 'v1', or 'v2'.", s)),
+            _ => Err(format!("Unknown revision: '{}'. Use 'r1', 'r2', 'r3', 'v1', or 'v2'.", s)),
         }
     }
 }
@@ -197,8 +201,10 @@ impl DocumentKey {
     pub fn cprt_identifier(&self) -> &'static str {
         match self {
             DocumentKey::Nist { document, revision } => match (document, revision) {
+                (NistDocument::Sp800171,  DocumentRevision::Rev1) => "sp_800_171_1_0_0",
                 (NistDocument::Sp800171,  DocumentRevision::Rev2) => "sp_800_171_2_0_0",
                 (NistDocument::Sp800171,  DocumentRevision::Rev3) => "sp_800_171_3_0_0",
+                (NistDocument::Sp800171A, DocumentRevision::Rev1) => "sp_800_171a_1_0_0",
                 (NistDocument::Sp800171A, DocumentRevision::Rev3) => "sp_800_171_a_3_0_0",
                 (NistDocument::Sp800172,  DocumentRevision::V1)   => "sp_800_172_1_0_0",
                 (NistDocument::Sp800172A, DocumentRevision::V1)   => "sp_800_172a_1_0_0",
@@ -215,8 +221,10 @@ impl DocumentKey {
     pub fn display_name(&self) -> String {
         match self {
             DocumentKey::Nist { document, revision } => match (document, revision) {
+                (NistDocument::Sp800171,  DocumentRevision::Rev1) => "SP 800-171 Rev 1".to_string(),
                 (NistDocument::Sp800171,  DocumentRevision::Rev2) => "SP 800-171 Rev 2".to_string(),
                 (NistDocument::Sp800171,  DocumentRevision::Rev3) => "SP 800-171 Rev 3".to_string(),
+                (NistDocument::Sp800171A, DocumentRevision::Rev1) => "SP 800-171A Rev 1".to_string(),
                 (NistDocument::Sp800171A, DocumentRevision::Rev3) => "SP 800-171A Rev 3".to_string(),
                 (NistDocument::Sp800172,  DocumentRevision::V1)   => "SP 800-172 v1.0".to_string(),
                 (NistDocument::Sp800172A, DocumentRevision::V1)   => "SP 800-172A v1.0".to_string(),
