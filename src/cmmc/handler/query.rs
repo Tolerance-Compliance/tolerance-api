@@ -20,11 +20,6 @@ pub fn parse_nist_document_key(document: &str, revision: &str) -> Result<Documen
                 "SP 800-171 uses revisions, not versions. Use r1, r2, or r3 (e.g. /sp800-171/r3).".to_string(),
             ));
         }
-        (NistDocument::Sp800171A, DocumentRevision::V1 | DocumentRevision::V2) => {
-            return Err(ApiError::BadRequest(
-                "SP 800-171A uses revisions, not versions. Use r1 or r3 (e.g. /sp800-171a/r1).".to_string(),
-            ));
-        }
         (NistDocument::Sp800172, DocumentRevision::Rev1 | DocumentRevision::Rev2 | DocumentRevision::Rev3) => {
             return Err(ApiError::BadRequest(
                 "SP 800-172 uses versions, not revisions. Use v1 (e.g. /sp800-172/v1).".to_string(),
