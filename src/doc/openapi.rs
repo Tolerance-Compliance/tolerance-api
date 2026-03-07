@@ -88,7 +88,7 @@ The `/v1/nist/:document/:revision/*` endpoints support:
 | Document     | Revision               | Description                                       |
 |--------------|------------------------|---------------------------------------------------|
 | `sp800-171`  | `r1`, `r2`, `r3`       | Security Requirements for CUI.                    |
-| `sp800-171a` | `v1`, `r3`             | Assessing Security Requirements for CUI.          |
+| `sp800-171a` | `v1`, `r3`             | Assessing Security Requirements for CUI. (Revision 2 was skipped, use Version 1 for 171 Revision 2.)         |
 | `sp800-172`  | `v1`                   | Enhanced Security Requirements for CUI.           |
 | `sp800-172a` | `v1`                   | Assessing Enhanced Security Requirements for CUI. |
 
