@@ -1,7 +1,7 @@
 FROM rust:alpine AS builder
 RUN apk add --no-cache musl-dev
 WORKDIR /app
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml ./
 COPY src ./src
 COPY assets ./assets
 RUN cargo build --release --bin tolerance-api
