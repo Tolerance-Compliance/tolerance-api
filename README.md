@@ -67,16 +67,7 @@ Send `Accept: text/toon` to receive a token-efficient plain-text format (30–40
 curl -H "Accept: text/toon" http://localhost:3000/v1/nist/sp800-171/r3/summary
 ```
 
-Errors always return JSON:
-
-```json
-{ "error": "Element '99.99.99' not found", "success": false }
-```
-
-| Status | Meaning       |
-|--------|---------------|
-| `400`  | Bad request   |
-| `404`  | Not found     |
+Errors always return JSON, and errors use typical HTTP failure codes. See [the HTTP response reference](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status).
 
 ---
 
