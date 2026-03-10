@@ -2,6 +2,9 @@
 
 REST API for querying **NIST SP 800-171**, **SP 800-172**, and **FAR 52.204-21** security requirements, built for CMMC compliance workflows.
 
+The official [NIST CPRT](https://csrc.nist.gov/projects/cprt/catalog#/cprt/home) JSON exports are the authoritative source for this data. However, consuming them directly means wrestling with very complex nested structures and stitching together multiple documents by hand, and applying CMMC scoring and POA&M rules from separate guidance yourself. 
+The point of this API, then, was to serve the user that same information through a clean, fast, (and tokio) REST interface, so that the information could be used for compliance dashboards, audit automation, and LLM pipelines (`text/toon` content header) doing CMMC gap analysis.
+
 Documents are loaded from the official NIST CPRT JSON exports at startup, indexed in memory, and served as a clean read-only JSON API. No database required.
 
 A Swagger UI is available at [`http://localhost:3000/`](http://localhost:3000/) and the raw OpenAPI spec at [`/api-docs/openapi.json`](http://localhost:3000/api-docs/openapi.json).
@@ -121,9 +124,7 @@ erDiagram
 
 ### NIST — Available Documents
 
-```
-GET /v1/nist/documents
-```
+- **`GET` `/v1/nist/documents`**
 
 Returns all loaded NIST documents.
 
@@ -142,9 +143,7 @@ curl http://localhost:3000/v1/nist/documents
 
 ### NIST — Summary
 
-```
-GET /v1/nist/:document/:revision/summary
-```
+- **`GET` `/v1/nist/:document/:revision/summary`**
 
 ```bash
 curl http://localhost:3000/v1/nist/sp800-171/r3/summary
@@ -169,18 +168,18 @@ curl http://localhost:3000/v1/nist/sp800-171/r3/summary
 
 ### NIST — Families
 
-```
-GET /v1/nist/:document/:revision/families
-GET /v1/nist/:document/:revision/families/:id
-```
+- **`GET` `/v1/nist/:document/:revision/families`**
+- **`GET` `/v1/nist/:document/:revision/families/:id`**
 
 Families are the top-level groupings (e.g. `03.01 Access Control`). Each family response includes nested requirements and security requirements.
 
-```bash
-# All families
+- All families
+```
 curl http://localhost:3000/v1/nist/sp800-171/r3/families
+```
 
-# Single family
+- Single family
+```
 curl http://localhost:3000/v1/nist/sp800-171/r3/families/03.01
 ```
 
@@ -213,9 +212,7 @@ curl http://localhost:3000/v1/nist/sp800-171/r3/families/03.01
 
 ### NIST — Requirements
 
-```
-GET /v1/nist/:document/:revision/requirements
-```
+- **`GET` `/v1/nist/:document/:revision/requirements`**
 
 All requirements across all families. Each requirement includes its nested security requirements, CMMC score, and POA&M validation.
 
@@ -227,9 +224,7 @@ curl http://localhost:3000/v1/nist/sp800-171/r3/requirements
 
 ### NIST — Security Requirements
 
-```
-GET /v1/nist/:document/:revision/security-requirements
-```
+- **`GET` `/v1/nist/:document/:revision/security-requirements`**
 
 All security requirements with their `discussion` and `assessment` text.
 
@@ -241,10 +236,8 @@ curl http://localhost:3000/v1/nist/sp800-171/r3/security-requirements
 
 ### NIST — Elements
 
-```
-GET /v1/nist/:document/:revision/elements
-GET /v1/nist/:document/:revision/elements/:id
-```
+- **`GET` `/v1/nist/:document/:revision/elements`**
+- **`GET` `/v1/nist/:document/:revision/elements/:id`**
 
 Raw elements with **search**, **type filtering**, and **pagination**.
 
@@ -255,20 +248,29 @@ Raw elements with **search**, **type filtering**, and **pagination**.
 | `limit`     | `int`    | `100`   | Max results (hard cap: `1000`) |
 | `offset`    | `int`    | `0`     | Pagination offset |
 
+
+- All elements (first 100)
 ```bash
-# All elements (first 100)
 curl http://localhost:3000/v1/nist/sp800-171/r3/elements
+```
 
-# Only families
+- Only families
+```bash
 curl "http://localhost:3000/v1/nist/sp800-171/r3/elements?type=family"
+```
 
-# Search for "encryption"
+- Search for "encryption"
+```bash
 curl "http://localhost:3000/v1/nist/sp800-171/r3/elements?search=encryption"
+```
 
-# Security requirements matching "access", page 2
+- Security requirements matching "access", page 2
+```bash
 curl "http://localhost:3000/v1/nist/sp800-171/r3/elements?type=security_requirement&search=access&limit=50&offset=50"
+```
 
-# Single element by ID
+- Single element by ID
+```bash
 curl http://localhost:3000/v1/nist/sp800-171/r3/elements/03.01.01
 ```
 
@@ -294,16 +296,17 @@ curl http://localhost:3000/v1/nist/sp800-171/r3/elements/03.01.01
 
 ### NIST — Relationships
 
-```
-GET /v1/nist/:document/:revision/relationships
-GET /v1/nist/:document/:revision/elements/:id/relationships
-```
+- **`GET` `/v1/nist/:document/:revision/relationships`**
+- **`GET` `/v1/nist/:document/:revision/elements/:id/relationships`**
 
+
+- All relationships
 ```bash
-# All relationships
 curl http://localhost:3000/v1/nist/sp800-171/r3/relationships
+```
 
-# Relationships for a specific element (source or destination)
+- Relationships for a specific element (source or destination)
+```bash
 curl http://localhost:3000/v1/nist/sp800-171/r3/elements/03.01.01/relationships
 ```
 
@@ -335,9 +338,7 @@ Validates whether NIST requirements can be placed on a Plan of Action & Mileston
 
 #### Validate a single requirement
 
-```
-GET /v1/nist/:document/:revision/poam/validate/:requirement_id
-```
+- **`GET` `/v1/nist/:document/:revision/poam/validate/:requirement_id`**
 
 ```bash
 curl http://localhost:3000/v1/nist/sp800-171/r3/poam/validate/03.01.01
@@ -355,10 +356,8 @@ curl http://localhost:3000/v1/nist/sp800-171/r3/poam/validate/03.01.01
 
 #### Validate a batch
 
-```
-POST /v1/nist/:document/:revision/poam/validate
-Content-Type: application/json
-```
+- **`POST` `/v1/nist/:document/:revision/poam/validate`**
+> With `Content-Type: application/json`
 
 ```bash
 curl -X POST http://localhost:3000/v1/nist/sp800-171/r3/poam/validate \
@@ -378,9 +377,7 @@ curl -X POST http://localhost:3000/v1/nist/sp800-171/r3/poam/validate \
 
 #### Non-eligible requirements
 
-```
-GET /v1/nist/:document/:revision/poam/non-eligible
-```
+- **`GET` `/v1/nist/:document/:revision/poam/non-eligible`**
 
 ```bash
 curl http://localhost:3000/v1/nist/sp800-171/r3/poam/non-eligible
@@ -394,29 +391,43 @@ Returns a list of requirement IDs that cannot be added to a POA&M.
 
 The FAR endpoints mirror the NIST endpoints. The only supported document is `52.204-21` at revision `v2`.
 
+- Summary
 ```bash
-# Summary
 curl http://localhost:3000/v1/far/52.204-21/v2/summary
+```
 
-# All families
+- All families
+```
 curl http://localhost:3000/v1/far/52.204-21/v2/families
+```
 
-# Single family
+- Single family
+```bash
 curl http://localhost:3000/v1/far/52.204-21/v2/families/AC
+```
 
-# All requirements
+- All requirements
+```bash
 curl http://localhost:3000/v1/far/52.204-21/v2/requirements
+```
 
-# Elements with search
+- Elements with search
+```bash
 curl "http://localhost:3000/v1/far/52.204-21/v2/elements?search=access"
+```
 
-# Single element
+- Single element
+```
 curl http://localhost:3000/v1/far/52.204-21/v2/elements/AC.1
+```
 
-# All relationships
+- All relationships
+```bash
 curl http://localhost:3000/v1/far/52.204-21/v2/relationships
+```
 
-# Element relationships
+- Element relationships
+```bash
 curl http://localhost:3000/v1/far/52.204-21/v2/elements/AC.1/relationships
 ```
 
