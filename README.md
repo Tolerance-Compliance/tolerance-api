@@ -10,16 +10,12 @@ A Swagger UI is available at [`http://localhost:3000/`](http://localhost:3000/) 
 
 ## Running
 
-```bash
-make build   # build Docker image and start container
-make rebuild # stop, rebuild, and restart
-make stop    # stop the container
-make logs    # tail container logs
-```
+> [!TIP]
+> When in the source directory, running `make help` will give you a list of all Makefile functions.
 
-The API listens on `http://localhost:3000` by default.
+The API listens on port 3000 by default, this can be changed by editing the constant `DEFAULT_PORT` in [main.rs](https://github.com/IronShield-Tech/tolerance-api/blob/main/src/main.rs).
 
-### Environment Variables
+### Environment Variables, See [main](https://github.com/IronShield-Tech/tolerance-api/blob/main/src/main.rs).
 
 | Variable                  | Default  | Description                       |
 |---------------------------|----------|-----------------------------------|
@@ -84,16 +80,50 @@ Errors always return JSON:
 
 ---
 
-## Endpoints
+## Data Model
 
-### Health Check
+```mermaid
+erDiagram
+    Family {
+        string identifier "e.g. 03.01"
+        string title
+    }
+    Requirement {
+        string identifier "e.g. 03.01.01"
+        string title
+        string text
+    }
+    SecurityRequirement {
+        string identifier "e.g. SR-03.01.01.a"
+        string title
+        string text
+        string discussion
+        string assessment
+    }
+    RequirementScore {
+        string cmmc_level "1 | 2 | 3"
+        int    point_value
+        bool   is_foundational
+        string priority "High | Medium | Low"
+    }
+    PoamValidation {
+        string eligibility "Eligible | NotEligible | Conditional"
+        string reason
+        array  conditions
+        string guidance
+    }
+    Relationship {
+        string source_element_identifier
+        string dest_element_identifier
+        string relationship_identifier
+    }
 
-```
-GET /health
-```
-
-```bash
-curl http://localhost:3000/health
+    Family            ||--o{ Requirement          : contains
+    Requirement       ||--o{ SecurityRequirement   : contains
+    Requirement       ||--o| RequirementScore      : "scored by"
+    Requirement       ||--o| PoamValidation        : "validated by"
+    Requirement       ||--o{ Relationship          : "linked via"
+    SecurityRequirement ||--o{ Relationship        : "linked via"
 ```
 
 ---
@@ -464,18 +494,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 
 ---
-
-## Data Model
-
-```
-Family  (e.g. "03.01 Access Control")
-  └── Requirement  (e.g. "03.01.01 Account Management")
-        ├── score           – CMMC level, point value, priority
-        ├── poam_validation – POA&M eligibility
-        └── SecurityRequirement  (e.g. "SR-03.01.01.a")
-              ├── discussion  (optional)
-              └── assessment  (optional)
-```
 
 ### Identifier Format
 
