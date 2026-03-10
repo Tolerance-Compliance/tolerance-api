@@ -1,69 +1,90 @@
-# CMMC API
+# NIST Document API
 
-REST API for querying **NIST SP 800-171 Rev 3** security requirements, built for CMMC (Cybersecurity Maturity Model Certification) compliance workflows.
+REST API for querying **NIST SP 800-171**, **SP 800-172**, and **FAR 52.204-21** security requirements, built for CMMC compliance workflows.
 
-The server loads the official NIST CPRT JSON export at startup, builds a search index for fast lookups, and exposes the data through a clean JSON API. All data is read-only and served from memory -- no database required.
+Documents are loaded from the official NIST CPRT JSON exports at startup, indexed in memory, and served as a clean read-only JSON API. No database required.
 
-## Setup
-
-Runs via Docker — no local Rust toolchain required.
-
-### Prerequisites
-
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- `make`
-
-### Commands
-
-#### `make build`
-
-Builds the Docker image and starts the container in the background. The API is available at [http://localhost:3000](http://localhost:3000).
-
-This compiles a release binary inside the container (`cargo build --release`) and runs it directly — no interpreter, no runtime overhead.
-
-Use this for the first run, or after pulling changes from main.
-
-#### `make rebuild`
-
-Stops any running instance, then builds and starts fresh. Use this after making code changes.
-
-#### `make stop`
-
-Stops and removes the container, kills anything on port 3000.
-
-#### `make logs`
-
-Tails the container's output. Shows startup logs and incoming request traces.
-
-### How it works
-
-The Dockerfile builds in two stages:
-
-1. **builder** — compiles the release binary using `rust:alpine`
-2. **runner** — copies the binary and NIST data file into a minimal Alpine image and runs it
-
-The same Dockerfile is used locally and in production (Fly.io).
+A Swagger UI is available at [`http://localhost:3000/`](http://localhost:3000/) and the raw OpenAPI spec at [`/api-docs/openapi.json`](http://localhost:3000/api-docs/openapi.json).
 
 ---
 
-### NEEDED
+## Running
 
-- The NIST data file (included): `cprt-sp_800_171_3_0_0-20260215-171034.json`
+```bash
+make build   # build Docker image and start container
+make rebuild # stop, rebuild, and restart
+make stop    # stop the container
+make logs    # tail container logs
+```
 
-### Configuration
+The API listens on `http://localhost:3000` by default.
 
-Set these environment variables or add them to a `.env` file:
+### Environment Variables
 
-| Variable         | Default                                            | Description                  |
-|------------------|----------------------------------------------------|------------------------------|
-| `HOST`           | `0.0.0.0`                                          | Bind address                 |
-| `PORT`           | `3000`                                              | Bind port                    |
-| `NIST_DATA_PATH` | `cprt-sp_800_171_3_0_0-20260215-171034.json`       | Path to the NIST JSON export |
-| `RUST_LOG`       | `cmmc_api=info,tower_http=debug`                   | Tracing log filter           |
+| Variable                  | Default  | Description                       |
+|---------------------------|----------|-----------------------------------|
+| `HOST`                    | `::`     | Bind address                      |
+| `PORT`                    | `3000`   | Bind port                         |
+| `RUST_LOG`                | `tolerance_api=info,tower_http=debug` | Log filter |
+| `NIST_SP800_171_R3_PATH`  | `data/cprt-sp_800_171_3_0_0-...json` | Override data file path |
+| `NIST_SP800_171_R2_PATH`  | `data/cprt-sp_800_171_2_0_0.json`    | Override data file path |
+| `NIST_SP800_171_R1_PATH`  | `data/cprt-sp_800_171_1_0_0.json`    | Override data file path |
+| `NIST_SP800_172_V1_PATH`  | `data/cprt-sp_800_172_1_0_0.json`    | Override data file path |
+| `NIST_SP800_171A_V1_PATH` | `data/cprt-sp_800_171a_1_0_0.json`   | Override data file path |
+| `NIST_SP800_171A_R3_PATH` | `data/cprt-sp_800_171_a_3_0_0.json`  | Override data file path |
+| `NIST_SP800_172A_V1_PATH` | `data/cprt-sp_800_172a_1_0_0.json`   | Override data file path |
+| `FAR_52_204_21_PATH`      | `data/cprt-far_52_204_21-...json`    | Override data file path |
 
-## API Reference
+---
 
-All endpoints are `GET` and return JSON. The base URL in all examples is `http://localhost:3000`.
+## URL Structure
+
+All endpoints are versioned and take a `document` + `revision` path segment:
+
+```
+/v1/nist/:document/:revision/...
+/v1/far/:document/:revision/...
+```
+
+### Valid Document / Revision Combinations
+
+| Document       | Revision | Path Example                         |
+|----------------|----------|--------------------------------------|
+| `sp800-171`    | `r1`     | `/v1/nist/sp800-171/r1/...`          |
+| `sp800-171`    | `r2`     | `/v1/nist/sp800-171/r2/...`          |
+| `sp800-171`    | `r3`     | `/v1/nist/sp800-171/r3/...`          |
+| `sp800-171a`   | `v1`     | `/v1/nist/sp800-171a/v1/...`         |
+| `sp800-171a`   | `r3`     | `/v1/nist/sp800-171a/r3/...`         |
+| `sp800-172`    | `v1`     | `/v1/nist/sp800-172/v1/...`          |
+| `sp800-172a`   | `v1`     | `/v1/nist/sp800-172a/v1/...`         |
+| `52.204-21`    | `v2`     | `/v1/far/52.204-21/v2/...`           |
+
+---
+
+## Response Format
+
+All endpoints return `application/json` by default.
+
+Send `Accept: text/toon` to receive a token-efficient plain-text format (30–40% fewer tokens, useful for LLM pipelines):
+
+```bash
+curl -H "Accept: text/toon" http://localhost:3000/v1/nist/sp800-171/r3/summary
+```
+
+Errors always return JSON:
+
+```json
+{ "error": "Element '99.99.99' not found", "success": false }
+```
+
+| Status | Meaning       |
+|--------|---------------|
+| `400`  | Bad request   |
+| `404`  | Not found     |
+
+---
+
+## Endpoints
 
 ### Health Check
 
@@ -75,27 +96,37 @@ GET /health
 curl http://localhost:3000/health
 ```
 
+---
+
+### NIST — Available Documents
+
+```
+GET /v1/nist/documents
+```
+
+Returns all loaded NIST documents.
+
+```bash
+curl http://localhost:3000/v1/nist/documents
+```
+
 ```json
-{
-  "status": 200,
-  "service": "cmmc-api",
-  "version": "0.1.0",
-  "timestamp": 1739900000000
-}
+[
+  { "id": "sp800-171/r3", "name": "SP 800-171 Rev 3", "document": "sp800-171", "revision": "r3" },
+  { "id": "sp800-171/r2", "name": "SP 800-171 Rev 2", "document": "sp800-171", "revision": "r2" }
+]
 ```
 
 ---
 
-### Dataset Summary
-
-High-level overview of the loaded NIST 800-171 data, including document metadata and element counts.
+### NIST — Summary
 
 ```
-GET /api/v1/cmmc/summary
+GET /v1/nist/:document/:revision/summary
 ```
 
 ```bash
-curl http://localhost:3000/api/v1/cmmc/summary
+curl http://localhost:3000/v1/nist/sp800-171/r3/summary
 ```
 
 ```json
@@ -115,171 +146,144 @@ curl http://localhost:3000/api/v1/cmmc/summary
 
 ---
 
-### Families
-
-Families are the top-level groupings (e.g. Access Control, Audit and Accountability). Each family contains nested requirements and security requirements.
-
-#### List all families
+### NIST — Families
 
 ```
-GET /api/v1/cmmc/families
+GET /v1/nist/:document/:revision/families
+GET /v1/nist/:document/:revision/families/:id
 ```
+
+Families are the top-level groupings (e.g. `03.01 Access Control`). Each family response includes nested requirements and security requirements.
 
 ```bash
-curl http://localhost:3000/api/v1/cmmc/families
-```
+# All families
+curl http://localhost:3000/v1/nist/sp800-171/r3/families
 
-Returns an array of families with their full hierarchy:
+# Single family
+curl http://localhost:3000/v1/nist/sp800-171/r3/families/03.01
+```
 
 ```json
-[
-  {
-    "identifier": "03.01",
-    "title": "Access Control",
-    "requirements": [
-      {
-        "identifier": "03.01.01",
-        "title": "Account Management",
-        "text": "a. Define...",
-        "security_requirements": [
-          {
-            "identifier": "SR-03.01.01.a",
-            "title": "...",
-            "text": "...",
-            "discussion": "...",
-            "assessment": "..."
-          }
-        ]
-      }
-    ]
-  }
-]
+{
+  "identifier": "03.01",
+  "title": "Access Control",
+  "requirements": [
+    {
+      "identifier": "03.01.01",
+      "title": "Account Management",
+      "text": "...",
+      "security_requirements": [
+        {
+          "identifier": "SR-03.01.01.a",
+          "title": "...",
+          "text": "...",
+          "discussion": "...",
+          "assessment": "..."
+        }
+      ],
+      "score": { "cmmc_level": "1", "point_value": 3, "is_foundational": true, "priority": "High" },
+      "poam_validation": { "requirement_id": "03.01.01", "eligibility": "NotEligible", ... }
+    }
+  ]
+}
 ```
-
-#### Get a specific family
-
-```
-GET /api/v1/cmmc/families/:id
-```
-
-```bash
-curl http://localhost:3000/api/v1/cmmc/families/03.01
-```
-
-Returns a single family with its nested requirements, or `404` if not found.
 
 ---
 
-### Elements
-
-Elements are the raw building blocks of the NIST data: families, requirements, security requirements, discussions, and assessments. The elements endpoint supports **search**, **type filtering**, and **pagination**.
-
-#### List elements (with filtering)
+### NIST — Requirements
 
 ```
-GET /api/v1/cmmc/elements
+GET /v1/nist/:document/:revision/requirements
 ```
 
-| Query Parameter | Type     | Default | Description                                                                       |
-|-----------------|----------|---------|-----------------------------------------------------------------------------------|
-| `type`          | `string` | --      | Filter by type: `family`, `requirement`, `security_requirement`, `discussion`, `assessment` |
-| `search`        | `string` | --      | Search in identifier, title, and text                                             |
-| `limit`         | `int`    | `100`   | Results per page (max `1000`)                                                     |
-| `offset`        | `int`    | `0`     | Pagination offset                                                                 |
+All requirements across all families. Each requirement includes its nested security requirements, CMMC score, and POA&M validation.
+
+```bash
+curl http://localhost:3000/v1/nist/sp800-171/r3/requirements
+```
+
+---
+
+### NIST — Security Requirements
+
+```
+GET /v1/nist/:document/:revision/security-requirements
+```
+
+All security requirements with their `discussion` and `assessment` text.
+
+```bash
+curl http://localhost:3000/v1/nist/sp800-171/r3/security-requirements
+```
+
+---
+
+### NIST — Elements
+
+```
+GET /v1/nist/:document/:revision/elements
+GET /v1/nist/:document/:revision/elements/:id
+```
+
+Raw elements with **search**, **type filtering**, and **pagination**.
+
+| Query Param | Type     | Default | Description |
+|-------------|----------|---------|-------------|
+| `type`      | `string` | —       | `family`, `requirement`, `security_requirement`, `discussion`, `assessment`, `adversary_effect`, `protection_strategy`, `effect`, `tactic`, `impact`, `expected_result`, `example` |
+| `search`    | `string` | —       | Full-text search in title and text |
+| `limit`     | `int`    | `100`   | Max results (hard cap: `1000`) |
+| `offset`    | `int`    | `0`     | Pagination offset |
 
 ```bash
 # All elements (first 100)
-curl http://localhost:3000/api/v1/cmmc/elements
+curl http://localhost:3000/v1/nist/sp800-171/r3/elements
 
 # Only families
-curl "http://localhost:3000/api/v1/cmmc/elements?type=family"
+curl "http://localhost:3000/v1/nist/sp800-171/r3/elements?type=family"
 
 # Search for "encryption"
-curl "http://localhost:3000/api/v1/cmmc/elements?search=encryption"
+curl "http://localhost:3000/v1/nist/sp800-171/r3/elements?search=encryption"
 
-# Search security requirements for "access"
-curl "http://localhost:3000/api/v1/cmmc/elements?type=security_requirement&search=access"
+# Security requirements matching "access", page 2
+curl "http://localhost:3000/v1/nist/sp800-171/r3/elements?type=security_requirement&search=access&limit=50&offset=50"
 
-# Page 2 (items 50-99)
-curl "http://localhost:3000/api/v1/cmmc/elements?limit=50&offset=50"
+# Single element by ID
+curl http://localhost:3000/v1/nist/sp800-171/r3/elements/03.01.01
 ```
-
-Response is paginated:
 
 ```json
 {
   "data": [
     {
-      "element_type": "family",
-      "element_identifier": "03.01",
-      "title": "Access Control",
-      "text": "",
+      "element_type": "requirement",
+      "element_identifier": "03.01.01",
+      "title": "Account Management",
+      "text": "...",
       "doc_identifier": "SP_800_171_3_0_0"
     }
   ],
-  "total": 420,
+  "total": 82,
   "limit": 100,
   "offset": 0,
-  "has_more": true
+  "has_more": false
 }
 ```
 
-#### Get a specific element
-
-```
-GET /api/v1/cmmc/elements/:id
-```
-
-```bash
-curl http://localhost:3000/api/v1/cmmc/elements/03.01.01
-```
-
-Returns a single element by its identifier.
-
 ---
 
-### Requirements
-
-Convenience endpoint that returns all elements of type `requirement`.
+### NIST — Relationships
 
 ```
-GET /api/v1/cmmc/requirements
-```
-
-```bash
-curl http://localhost:3000/api/v1/cmmc/requirements
-```
-
-Returns an array of `Element` objects where `element_type` is `"requirement"`.
-
----
-
-### Security Requirements
-
-Convenience endpoint that returns all elements of type `security_requirement`.
-
-```
-GET /api/v1/cmmc/security-requirements
+GET /v1/nist/:document/:revision/relationships
+GET /v1/nist/:document/:revision/elements/:id/relationships
 ```
 
 ```bash
-curl http://localhost:3000/api/v1/cmmc/security-requirements
-```
+# All relationships
+curl http://localhost:3000/v1/nist/sp800-171/r3/relationships
 
----
-
-### Relationships
-
-Relationships describe how elements connect to each other (e.g. a requirement belonging to a family, or a discussion relating to a security requirement).
-
-#### List all relationships
-
-```
-GET /api/v1/cmmc/relationships
-```
-
-```bash
-curl http://localhost:3000/api/v1/cmmc/relationships
+# Relationships for a specific element (source or destination)
+curl http://localhost:3000/v1/nist/sp800-171/r3/elements/03.01.01/relationships
 ```
 
 ```json
@@ -295,64 +299,188 @@ curl http://localhost:3000/api/v1/cmmc/relationships
 ]
 ```
 
-#### Get relationships for a specific element
+---
+
+### POA&M Validation
+
+Validates whether NIST requirements can be placed on a Plan of Action & Milestones.
+
+**Rules:**
+- **Level 1 foundational** → `NotEligible` (must implement immediately)
+- **Level 1 non-foundational** → `Conditional` (exec approval + 90 days)
+- **Level 2 high-priority** → `Conditional` (compensating controls + 180 days)
+- **Level 2 medium/low** → `Eligible` (remediation plan + 365 days)
+- **Level 3** → `Eligible` (risk acceptance + 365 days)
+
+#### Validate a single requirement
 
 ```
-GET /api/v1/cmmc/elements/:id/relationships
+GET /v1/nist/:document/:revision/poam/validate/:requirement_id
 ```
 
 ```bash
-curl http://localhost:3000/api/v1/cmmc/elements/03.01.01/relationships
+curl http://localhost:3000/v1/nist/sp800-171/r3/poam/validate/03.01.01
 ```
 
-Returns all relationships where the element appears as either source or destination.
+```json
+{
+  "requirement_id": "03.01.01",
+  "eligibility": "NotEligible",
+  "reason": "FoundationalRequirement",
+  "conditions": [],
+  "guidance": "This is a foundational CMMC Level 1 requirement and must be implemented immediately..."
+}
+```
+
+#### Validate a batch
+
+```
+POST /v1/nist/:document/:revision/poam/validate
+Content-Type: application/json
+```
+
+```bash
+curl -X POST http://localhost:3000/v1/nist/sp800-171/r3/poam/validate \
+  -H "Content-Type: application/json" \
+  -d '{"requirement_ids": ["03.01.01", "03.01.03", "03.02.01"]}'
+```
+
+```json
+{
+  "validations": [ ... ],
+  "total": 3,
+  "eligible_count": 1,
+  "not_eligible_count": 1,
+  "conditional_count": 1
+}
+```
+
+#### Non-eligible requirements
+
+```
+GET /v1/nist/:document/:revision/poam/non-eligible
+```
+
+```bash
+curl http://localhost:3000/v1/nist/sp800-171/r3/poam/non-eligible
+```
+
+Returns a list of requirement IDs that cannot be added to a POA&M.
+
+---
+
+### FAR 52.204-21
+
+The FAR endpoints mirror the NIST endpoints. The only supported document is `52.204-21` at revision `v2`.
+
+```bash
+# Summary
+curl http://localhost:3000/v1/far/52.204-21/v2/summary
+
+# All families
+curl http://localhost:3000/v1/far/52.204-21/v2/families
+
+# Single family
+curl http://localhost:3000/v1/far/52.204-21/v2/families/AC
+
+# All requirements
+curl http://localhost:3000/v1/far/52.204-21/v2/requirements
+
+# Elements with search
+curl "http://localhost:3000/v1/far/52.204-21/v2/elements?search=access"
+
+# Single element
+curl http://localhost:3000/v1/far/52.204-21/v2/elements/AC.1
+
+# All relationships
+curl http://localhost:3000/v1/far/52.204-21/v2/relationships
+
+# Element relationships
+curl http://localhost:3000/v1/far/52.204-21/v2/elements/AC.1/relationships
+```
+
+---
+
+## Rust Examples
+
+Using [`reqwest`](https://docs.rs/reqwest) with [`serde_json`](https://docs.rs/serde_json):
+
+```rust
+use reqwest::Client;
+use serde_json::Value;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    let base = "http://localhost:3000";
+
+    // Get summary
+    let summary: Value = client
+        .get(format!("{}/v1/nist/sp800-171/r3/summary", base))
+        .send().await?
+        .json().await?;
+    println!("{}", summary["family_count"]);
+
+    // Get all families
+    let families: Value = client
+        .get(format!("{}/v1/nist/sp800-171/r3/families", base))
+        .send().await?
+        .json().await?;
+
+    // Search elements
+    let results: Value = client
+        .get(format!("{}/v1/nist/sp800-171/r3/elements", base))
+        .query(&[("search", "encryption"), ("type", "requirement")])
+        .send().await?
+        .json().await?;
+    println!("Found {} results", results["total"]);
+
+    // Validate a single requirement for POA&M
+    let validation: Value = client
+        .get(format!("{}/v1/nist/sp800-171/r3/poam/validate/03.01.01", base))
+        .send().await?
+        .json().await?;
+    println!("Eligibility: {}", validation["eligibility"]);
+
+    // Batch POA&M validation
+    let batch: Value = client
+        .post(format!("{}/v1/nist/sp800-171/r3/poam/validate", base))
+        .json(&serde_json::json!({
+            "requirement_ids": ["03.01.01", "03.01.03", "03.02.01"]
+        }))
+        .send().await?
+        .json().await?;
+    println!("{} eligible", batch["eligible_count"]);
+
+    // LLM-optimized output (text/toon format)
+    let toon = client
+        .get(format!("{}/v1/nist/sp800-171/r3/requirements", base))
+        .header("Accept", "text/toon")
+        .send().await?
+        .text().await?;
+
+    Ok(())
+}
+```
 
 ---
 
 ## Data Model
 
-The API exposes NIST SP 800-171 data in a hierarchy:
-
 ```
-Family (e.g. "03.01 Access Control")
-  └── Requirement (e.g. "03.01.01 Account Management")
-        └── Security Requirement (e.g. "SR-03.01.01.a")
-              ├── Discussion (optional)
-              └── Assessment (optional)
+Family  (e.g. "03.01 Access Control")
+  └── Requirement  (e.g. "03.01.01 Account Management")
+        ├── score           – CMMC level, point value, priority
+        ├── poam_validation – POA&M eligibility
+        └── SecurityRequirement  (e.g. "SR-03.01.01.a")
+              ├── discussion  (optional)
+              └── assessment  (optional)
 ```
-
-### Element Types
-
-| Type                     | Description                                      |
-|--------------------------|--------------------------------------------------|
-| `family`                 | Top-level grouping (e.g. Access Control)          |
-| `requirement`            | Specific requirement within a family              |
-| `security_requirement`   | Detailed security requirement under a requirement |
-| `discussion`             | Supplementary discussion text                     |
-| `assessment`             | Assessment procedure text                         |
 
 ### Identifier Format
 
-Identifiers follow a hierarchical dot notation:
-
-- Family: `03.01`
-- Requirement: `03.01.01`
-- Security Requirement: `SR-03.01.01.a`
-
----
-
-## Error Responses
-
-Errors return JSON with an `error` message and `success: false`:
-
-```json
-{
-  "error": "Family '99.99' not found",
-  "success": false
-}
-```
-
-| Status | Meaning           |
-|--------|-------------------|
-| `404`  | Element not found |
-| `400`  | Bad request       |
+| Type                 | Example           |
+|----------------------|-------------------|
+| Family               | `03.01`           |
+| Requirement          | `03.01.01`        |
+| Security Requirement | `SR-03.01.01.a`   |
