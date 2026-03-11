@@ -1,6 +1,6 @@
 # NIST Document API
 
-REST API for querying **NIST SP 800-171**, **SP 800-172**, and **FAR 52.204-21** security requirements, built for CMMC compliance workflows.
+REST API for querying **NIST SP 800-53**, **SP 800-171**, **SP 800-172**, and **FAR 52.204-21** security requirements, built for CMMC compliance workflows.
 
 The official [NIST CPRT](https://csrc.nist.gov/projects/cprt/catalog#/cprt/home) JSON exports are the authoritative source for this data. However, consuming them directly means wrestling with very complex nested structures and stitching together multiple documents by hand, and applying CMMC scoring and POA&M rules from separate guidance yourself. 
 The point of this API, then, was to serve the user that same information through a clean, fast, (and tokio) REST interface, so that the information could be used for compliance dashboards, audit automation, and LLM pipelines (`text/toon` content header) doing CMMC gap analysis.
@@ -25,6 +25,9 @@ The API listens on port 3000 by default, this can be changed by editing the cons
 | `HOST`                    | `::`     | Bind address                      |
 | `PORT`                    | `3000`   | Bind port                         |
 | `RUST_LOG`                | `tolerance_api=info,tower_http=debug` | Log filter |
+| `NIST_SP800_53_R5_PATH`   | `data/cprt_SP_800_53_5_2_0_03-10-2026.json`  | Override data file path |
+| `NIST_SP800_53A_R5_PATH`  | `data/cprt_SP_800_53_A_5_2_0_03-10-2026.json` | Override data file path |
+| `NIST_SP800_53B_R5_PATH`  | `data/cprt_SP_800_53_B_5_2_0_03-10-2026.json` | Override data file path |
 | `NIST_SP800_171_R3_PATH`  | `data/cprt-sp_800_171_3_0_0-...json` | Override data file path |
 | `NIST_SP800_171_R2_PATH`  | `data/cprt-sp_800_171_2_0_0.json`    | Override data file path |
 | `NIST_SP800_171_R1_PATH`  | `data/cprt-sp_800_171_1_0_0.json`    | Override data file path |
@@ -49,6 +52,9 @@ All endpoints are versioned and take a `document` + `revision` path segment:
 
 | Document       | Revision | Path Example                         |
 |----------------|----------|--------------------------------------|
+| `sp800-53`     | `r5`     | `/v1/nist/sp800-53/r5/...`           |
+| `sp800-53a`    | `r5`     | `/v1/nist/sp800-53a/r5/...`          |
+| `sp800-53b`    | `r5`     | `/v1/nist/sp800-53b/r5/...`          |
 | `sp800-171`    | `r1`     | `/v1/nist/sp800-171/r1/...`          |
 | `sp800-171`    | `r2`     | `/v1/nist/sp800-171/r2/...`          |
 | `sp800-171`    | `r3`     | `/v1/nist/sp800-171/r3/...`          |
@@ -134,6 +140,9 @@ curl http://localhost:3000/v1/nist/documents
 
 ```json
 [
+  { "id": "sp800-53/r5",  "name": "SP 800-53 Rev 5",  "document": "sp800-53",  "revision": "r5" },
+  { "id": "sp800-53a/r5", "name": "SP 800-53A Rev 5", "document": "sp800-53a", "revision": "r5" },
+  { "id": "sp800-53b/r5", "name": "SP 800-53B Rev 5", "document": "sp800-53b", "revision": "r5" },
   { "id": "sp800-171/r3", "name": "SP 800-171 Rev 3", "document": "sp800-171", "revision": "r3" },
   { "id": "sp800-171/r2", "name": "SP 800-171 Rev 2", "document": "sp800-171", "revision": "r2" }
 ]
@@ -243,7 +252,7 @@ Raw elements with **search**, **type filtering**, and **pagination**.
 
 | Query Param | Type     | Default | Description |
 |-------------|----------|---------|-------------|
-| `type`      | `string` | —       | `family`, `requirement`, `security_requirement`, `discussion`, `assessment`, `adversary_effect`, `protection_strategy`, `effect`, `tactic`, `impact`, `expected_result`, `example` |
+| `type`      | `string` | —       | **800-171/172:** `family`, `requirement`, `security_requirement`, `discussion`, `assessment`, `adversary_effect`, `protection_strategy`, `effect`, `tactic`, `impact`, `expected_result`, `example` — **800-53:** `control`, `control_enhancement`, `control_statement`, `security_baseline`, `privacy_baseline`, `reference`, `public_comment` |
 | `search`    | `string` | —       | Full-text search in title and text |
 | `limit`     | `int`    | `100`   | Max results (hard cap: `1000`) |
 | `offset`    | `int`    | `0`     | Pagination offset |
@@ -384,6 +393,47 @@ curl http://localhost:3000/v1/nist/sp800-171/r3/poam/non-eligible
 ```
 
 Returns a list of requirement IDs that cannot be added to a POA&M.
+
+---
+
+### SP 800-53
+
+SP 800-53 Rev 5 endpoints work exactly like the other NIST endpoints. Three documents are supported: the main controls catalog (`sp800-53`), the assessment procedures (`sp800-53a`), and the control baselines (`sp800-53b`).
+
+- Summary
+```bash
+curl http://localhost:3000/v1/nist/sp800-53/r5/summary
+```
+
+- All families
+```bash
+curl http://localhost:3000/v1/nist/sp800-53/r5/families
+```
+
+- Single family
+```bash
+curl http://localhost:3000/v1/nist/sp800-53/r5/families/AC
+```
+
+- All requirements
+```bash
+curl http://localhost:3000/v1/nist/sp800-53/r5/requirements
+```
+
+- Elements with search
+```bash
+curl "http://localhost:3000/v1/nist/sp800-53/r5/elements?search=encryption"
+```
+
+- SP 800-53A (assessment procedures)
+```bash
+curl http://localhost:3000/v1/nist/sp800-53a/r5/summary
+```
+
+- SP 800-53B (control baselines)
+```bash
+curl http://localhost:3000/v1/nist/sp800-53b/r5/summary
+```
 
 ---
 

@@ -77,7 +77,7 @@ use crate::constant::OPENAPI_CACHE_DURATION;
     info(
         title = "Tolerance API",
         version = env!("CARGO_PKG_VERSION"),
-        description = r#"REST API for NIST SP 800-171, SP 800-171A, SP 800-172, SP 800-172A, and FAR 52.204-21 security requirements and assessment procedures.
+        description = r#"REST API for NIST SP 800-53, SP 800-53A, SP 800-53B, SP 800-171, SP 800-171A, SP 800-172, SP 800-172A, and FAR 52.204-21 security requirements and assessment procedures.
 
 ## Supported Documents
 
@@ -85,12 +85,15 @@ use crate::constant::OPENAPI_CACHE_DURATION;
 
 The `/v1/nist/:document/:revision/*` endpoints support:
 
-| Document     | Revision               | Description                                       |
-|--------------|------------------------|---------------------------------------------------|
-| `sp800-171`  | `r1`, `r2`, `r3`       | Security Requirements for CUI.                    |
-| `sp800-171a` | `v1`, `r3`             | Assessing Security Requirements for CUI. (Revision 2 was skipped, use Version 1 for 171 Revision 2.)         |
-| `sp800-172`  | `v1`                   | Enhanced Security Requirements for CUI.           |
-| `sp800-172a` | `v1`                   | Assessing Enhanced Security Requirements for CUI. |
+| Document     | Revision               | Description                                                      |
+|--------------|------------------------|------------------------------------------------------------------|
+| `sp800-53`   | `r5`                   | Security and Privacy Controls for Information Systems and Organizations. |
+| `sp800-53a`  | `r5`                   | Assessing Security and Privacy Controls (assessment procedures). |
+| `sp800-53b`  | `r5`                   | Control Baselines for Information Systems and Organizations.     |
+| `sp800-171`  | `r1`, `r2`, `r3`       | Security Requirements for CUI.                                   |
+| `sp800-171a` | `v1`, `r3`             | Assessing Security Requirements for CUI. (Revision 2 was skipped, use Version 1 for 171 Revision 2.) |
+| `sp800-172`  | `v1`                   | Enhanced Security Requirements for CUI.                          |
+| `sp800-172a` | `v1`                   | Assessing Enhanced Security Requirements for CUI.                |
 
 Use `/v1/nist/documents` to discover all loaded NIST documents at runtime.
 

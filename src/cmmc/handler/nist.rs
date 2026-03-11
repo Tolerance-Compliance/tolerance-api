@@ -11,7 +11,7 @@ use crate::cmmc::state::CmmcState;
 use crate::cmmc::format_response::{FormatResponse, wants_toon};
 use crate::handler::error::ApiError;
 
-use super::query::{parse_nist_document_key, ElementQuery};
+use super::query::{parse_nist_document_key, require_cmmc_structured, ElementQuery};
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct DocumentInfo {
@@ -133,6 +133,7 @@ pub async fn get_families(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<Family>>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
+    require_cmmc_structured(key)?;
     let doc = state.get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
@@ -172,6 +173,7 @@ pub async fn get_family(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Family>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
+    require_cmmc_structured(key)?;
     let doc = state.get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
@@ -308,6 +310,7 @@ pub async fn get_requirements(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<Requirement>>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
+    require_cmmc_structured(key)?;
     let doc = state.get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
@@ -346,6 +349,7 @@ pub async fn get_security_requirements(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<SecurityRequirement>>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
+    require_cmmc_structured(key)?;
     let doc = state.get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 

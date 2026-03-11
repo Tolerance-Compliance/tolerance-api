@@ -5,6 +5,50 @@ use serde::Deserialize;
 use crate::cmmc::model::{ElementType, NistDocument, FarDocument, DocumentKey, DocumentRevision};
 use crate::handler::error::ApiError;
 
+/// Returns `Err(NotImplemented)` if `key` is an SP 800-53 document.
+///
+/// The `/families`, `/requirements`, and `/security-requirements` endpoints rely on the
+/// SP 800-171/172 hierarchical model (Family → Requirement → SecurityRequirement) and
+/// identifier naming conventions (`03.01`, `SR-03.01.01`). SP 800-53 uses a flat control
+/// model (`control`, `control_enhancement`) with different identifier patterns (`AC-1`,
+/// `AC-1(1)`), so those endpoints return misleading empty results for 800-53 documents.
+///
+/// The error response includes a `hint` object with the correct replacement URLs so the
+/// caller can immediately switch to the right endpoint.
+pub fn require_cmmc_structured(key: DocumentKey) -> Result<(), ApiError> {
+    let is_sp800_53 = matches!(
+        key,
+        DocumentKey::Nist {
+            document: NistDocument::Sp800053 | NistDocument::Sp800053A | NistDocument::Sp800053B,
+            ..
+        }
+    );
+
+    if !is_sp800_53 {
+        return Ok(());
+    }
+
+    let base = format!("/v1/nist/{}/{}", key.document_string(), key.revision_string());
+    Err(ApiError::NotImplemented {
+        message: format!(
+            "The /families, /requirements, and /security-requirements endpoints use the \
+             SP 800-171/172 hierarchical structure (Family → Requirement → SecurityRequirement) \
+             and SP 800-171-style identifiers (e.g. 03.01.01, SR-03.01.01.a). \
+             SP 800-53 uses a flat control model with identifiers like AC-1 and AC-1(1). \
+             Use the /elements endpoint with a ?type filter instead."
+        ),
+        hint: serde_json::json!({
+            "families":             format!("{}/elements?type=family", base),
+            "controls":             format!("{}/elements?type=control", base),
+            "control_enhancements": format!("{}/elements?type=control_enhancement", base),
+            "search":               format!("{}/elements?search=<term>", base),
+            "all_elements":         format!("{}/elements", base),
+            "relationships":        format!("{}/relationships", base),
+            "docs":                 "https://github.com/IronShield-Tech/tolerance-api#sp-800-53",
+        }),
+    })
+}
+
 /// Parse NIST document and revision path segments into a `DocumentKey`
 pub fn parse_nist_document_key(document: &str, revision: &str) -> Result<DocumentKey, ApiError> {
     let doc = document
@@ -15,17 +59,23 @@ pub fn parse_nist_document_key(document: &str, revision: &str) -> Result<Documen
         .map_err(|e| ApiError::BadRequest(e))?;
 
     match (doc, rev) {
+        (NistDocument::Sp800053 | NistDocument::Sp800053A | NistDocument::Sp800053B,
+         DocumentRevision::V1 | DocumentRevision::V2) => {
+            return Err(ApiError::BadRequest(
+                "SP 800-53 documents use revisions, not versions. Use r5 (e.g. /sp800-53/r5).".to_string(),
+            ));
+        }
         (NistDocument::Sp800171, DocumentRevision::V1 | DocumentRevision::V2) => {
             return Err(ApiError::BadRequest(
                 "SP 800-171 uses revisions, not versions. Use r1, r2, or r3 (e.g. /sp800-171/r3).".to_string(),
             ));
         }
-        (NistDocument::Sp800172, DocumentRevision::Rev1 | DocumentRevision::Rev2 | DocumentRevision::Rev3) => {
+        (NistDocument::Sp800172, DocumentRevision::Rev1 | DocumentRevision::Rev2 | DocumentRevision::Rev3 | DocumentRevision::Rev5) => {
             return Err(ApiError::BadRequest(
                 "SP 800-172 uses versions, not revisions. Use v1 (e.g. /sp800-172/v1).".to_string(),
             ));
         }
-        (NistDocument::Sp800172A, DocumentRevision::Rev1 | DocumentRevision::Rev2 | DocumentRevision::Rev3) => {
+        (NistDocument::Sp800172A, DocumentRevision::Rev1 | DocumentRevision::Rev2 | DocumentRevision::Rev3 | DocumentRevision::Rev5) => {
             return Err(ApiError::BadRequest(
                 "SP 800-172A uses versions, not revisions. Use v1 (e.g. /sp800-172a/v1).".to_string(),
             ));
@@ -87,6 +137,7 @@ impl ElementQuery {
     pub fn parse_element_type(&self) -> Option<ElementType> {
         self.element_type.as_ref().and_then(|t| {
             match t.to_lowercase().as_str() {
+                // SP 800-171 / 800-172 types
                 "family"               => Some(ElementType::Family),
                 "requirement"          => Some(ElementType::Requirement),
                 "security_requirement" => Some(ElementType::SecurityRequirement),
@@ -99,6 +150,15 @@ impl ElementQuery {
                 "impact"               => Some(ElementType::Impact),
                 "expected_result"      => Some(ElementType::ExpectedResult),
                 "example"              => Some(ElementType::Example),
+                // SP 800-53 types
+                "control"              => Some(ElementType::Control),
+                "control_enhancement"  => Some(ElementType::ControlEnhancement),
+                "control_statement"    => Some(ElementType::ControlStatement),
+                "control_name_sort"    => Some(ElementType::ControlNameSort),
+                "security_baseline"    => Some(ElementType::SecurityBaseline),
+                "privacy_baseline"     => Some(ElementType::PrivacyBaseline),
+                "reference"            => Some(ElementType::Reference),
+                "public_comment"       => Some(ElementType::PublicComment),
                 _                      => None,
             }
         })

@@ -26,7 +26,23 @@ struct DocumentSpec {
 /// All supported documents in load order.
 fn document_specs() -> Vec<DocumentSpec> {
     vec![
-        // NIST documents
+        // NIST SP 800-53 documents
+        DocumentSpec {
+            key:          DocumentKey::nist(NistDocument::Sp800053, DocumentRevision::Rev5),
+            env_var:      "NIST_SP800_53_R5_PATH",
+            default_path: Some("data/cprt_SP_800_53_5_2_0_03-10-2026.json"),
+        },
+        DocumentSpec {
+            key:          DocumentKey::nist(NistDocument::Sp800053A, DocumentRevision::Rev5),
+            env_var:      "NIST_SP800_53A_R5_PATH",
+            default_path: Some("data/cprt_SP_800_53_A_5_2_0_03-10-2026.json"),
+        },
+        DocumentSpec {
+            key:          DocumentKey::nist(NistDocument::Sp800053B, DocumentRevision::Rev5),
+            env_var:      "NIST_SP800_53B_R5_PATH",
+            default_path: Some("data/cprt_SP_800_53_B_5_2_0_03-10-2026.json"),
+        },
+        // NIST SP 800-171 / 172 documents
         DocumentSpec {
             key:          DocumentKey::nist(NistDocument::Sp800171, DocumentRevision::Rev3),
             env_var:      "NIST_SP800_171_R3_PATH",
