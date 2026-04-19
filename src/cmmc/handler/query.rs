@@ -116,7 +116,7 @@ pub struct ElementQuery {
     pub element_type: Option<String>,
     /// Search in title or text
     pub search: Option<String>,
-    /// Maximum number of results (default: 100, max: 1000)
+    /// Maximum number of results (default: 100, max: 5000)
     pub limit: Option<usize>,
     /// Offset for pagination (default: 0)
     pub offset: Option<usize>,
@@ -124,7 +124,7 @@ pub struct ElementQuery {
 
 impl ElementQuery {
     pub const DEFAULT_LIMIT: usize = 100;
-    pub const MAX_LIMIT: usize = 1000;
+    pub const MAX_LIMIT: usize = 5000;
 
     pub fn limit(&self) -> usize {
         self.limit.unwrap_or(Self::DEFAULT_LIMIT).min(Self::MAX_LIMIT)
