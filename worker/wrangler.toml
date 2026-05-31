@@ -1,0 +1,21 @@
+name = "tolerance-api"
+main = "build/worker/shim.mjs"
+workers_dev = true
+compatibility_date = "2026-05-01"
+
+# Minimize the wasm bundle.
+minify = true
+
+[build]
+command = "cargo install -q worker-build && worker-build --release && wasm-opt --enable-bulk-memory --enable-gc --strip-debug --strip-dwarf --strip-producers -Oz build/index_bg.wasm -o build/index_bg.wasm"
+
+# CMMC/NIST catalogs (171, 171a, 172, 172a, FAR) live in R2 under the `catalogs/`
+# prefix so the Worker can stream + parse them lazily at runtime instead of
+# embedding ~3 MB of JSON in the wasm bundle. SP 800-53 is intentionally not
+# uploaded; that document stays on the native Fly service.
+#
+# We reuse the existing SSP bucket (it already holds reference templates); it can
+# be renamed/migrated to a generic bucket later if desired.
+[[r2_buckets]]
+binding = "CATALOGS"
+bucket_name = "tolerance-ssp-documents"

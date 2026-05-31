@@ -1,10 +1,14 @@
 FROM rust:alpine AS builder
 RUN apk add --no-cache musl-dev
 WORKDIR /app
+# Workspace manifest + the two native members (core + native). The `data/`
+# directory is needed at build time too: core embeds data/cmmc-scoring.json via
+# include_str!.
 COPY Cargo.toml ./
-COPY src ./src
-COPY assets ./assets
-RUN cargo build --release --bin tolerance-api
+COPY core ./core
+COPY native ./native
+COPY data ./data
+RUN cargo build --release -p tolerance-api --bin tolerance-api
 
 FROM alpine AS runner
 RUN apk add --no-cache ca-certificates

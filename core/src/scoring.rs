@@ -52,25 +52,24 @@ struct ScoreJson {
     notes: Option<String>,
 }
 
+/// CMMC scoring table, embedded at compile time.
+///
+/// Bundled (rather than read from disk) so the table is available on both the
+/// native service and the wasm32 Worker, which has no filesystem. The file is
+/// small (~21 KB), so embedding it has negligible bundle cost.
+const SCORING_JSON: &str =
+    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../data/cmmc-scoring.json"));
+
 /// Scoring database
 pub struct ScoringDatabase {
     scores: HashMap<String, RequirementScore>,
 }
 
 impl ScoringDatabase {
-    /// Load from JSON file
+    /// Load from the embedded scoring table.
     pub fn new() -> Self {
-        let json = std::fs::read_to_string("data/cmmc-scoring.json")
-            .unwrap_or_else(|e| {
-                tracing::warn!("Can't load scoring file: {}", e);
-                String::from("{\"requirements\":{}}")
-            });
-
-        let file: ScoringFile = serde_json::from_str(&json)
-            .unwrap_or_else(|e| {
-                tracing::warn!("Can't parse scoring JSON: {}", e);
-                ScoringFile { requirements: HashMap::new() }
-            });
+        let file: ScoringFile = serde_json::from_str(SCORING_JSON)
+            .unwrap_or_else(|_| ScoringFile { requirements: HashMap::new() });
 
         let mut scores = HashMap::new();
         for (id, score_json) in file.requirements {

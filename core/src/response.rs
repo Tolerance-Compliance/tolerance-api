@@ -65,11 +65,11 @@ pub struct PaginatedResponse<T> {
 }
 
 // type aliases for OpenAPI documentation.
-pub type         ElementListResponse = PaginatedResponse<crate::cmmc::model::Element>;
+pub type         ElementListResponse = PaginatedResponse<crate::model::Element>;
 pub type          FamilyListResponse = Vec<Family>;
-pub type     RequirementListResponse = Vec<crate::cmmc::model::Element>;
-pub type    RelationshipListResponse = Vec<crate::cmmc::model::Relationship>;
+pub type     RequirementListResponse = Vec<crate::model::Element>;
+pub type    RelationshipListResponse = Vec<crate::model::Relationship>;
 pub type              FamilyResponse = Family;
-pub type             ElementResponse = crate::cmmc::model::Element;
-pub type ElementRelationshipResponse = Vec<crate::cmmc::model::Relationship>;
+pub type             ElementResponse = crate::model::Element;
+pub type ElementRelationshipResponse = Vec<crate::model::Relationship>;
 pub type             SummaryResponse = DataSummary;

@@ -5,37 +5,18 @@ use axum::{
     http::HeaderMap,
     Json,
 };
-use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
 
+use tolerance_api_core::query::parse_nist_document_key;
+use tolerance_api_core::service;
+
+use crate::cmmc::format_response::{wants_toon, FormatResponse};
 use crate::cmmc::poam::PoamValidation;
 use crate::cmmc::state::CmmcState;
-use crate::cmmc::format_response::{FormatResponse, wants_toon};
 use crate::handler::error::ApiError;
 
-use super::query::parse_nist_document_key;
-
-/// Request body for batch POA&M validation
-#[derive(Debug, Deserialize, ToSchema)]
-pub struct BatchValidationRequest {
-    /// List of requirement identifiers to validate
-    pub requirement_ids: Vec<String>,
-}
-
-/// Response for batch POA&M validation
-#[derive(Debug, Serialize, ToSchema)]
-pub struct BatchValidationResponse {
-    /// Validation results for each requirement
-    pub validations: Vec<PoamValidation>,
-    /// Total number of requirements validated
-    pub total: usize,
-    /// Number of eligible requirements
-    pub eligible_count: usize,
-    /// Number of not eligible requirements
-    pub not_eligible_count: usize,
-    /// Number of conditional requirements
-    pub conditional_count: usize,
-}
+/// Request/response bodies are defined in core; re-exported here so the OpenAPI
+/// spec can reference `crate::cmmc::handler::poam::BatchValidation*`.
+pub use tolerance_api_core::service::{BatchValidationRequest, BatchValidationResponse};
 
 /// Validate whether a single requirement can be added to POA&M
 #[utoipa::path(
@@ -63,13 +44,13 @@ pub async fn validate_poam_requirement(
     headers: HeaderMap,
 ) -> Result<FormatResponse<PoamValidation>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
-    
-    // Verify the document is loaded
-    state.get_document(key)
+
+    // Verify the document is loaded.
+    state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let validation = state.poam_validator().validate(&requirement_id);
-    
+    let validation = service::validate_poam_requirement(state.poam_validator(), &requirement_id);
     Ok(FormatResponse::with_format(validation, wants_toon(&headers)))
 }
 
@@ -100,33 +81,13 @@ pub async fn validate_poam_batch(
     Json(request): Json<BatchValidationRequest>,
 ) -> Result<FormatResponse<BatchValidationResponse>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
-    
-    // Verify the document is loaded
-    state.get_document(key)
+
+    // Verify the document is loaded.
+    state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let validations = state.poam_validator().validate_batch(&request.requirement_ids);
-    
-    let eligible_count = validations.iter()
-        .filter(|v| matches!(v.eligibility, crate::cmmc::poam::PoamEligibility::Eligible))
-        .count();
-    
-    let not_eligible_count = validations.iter()
-        .filter(|v| matches!(v.eligibility, crate::cmmc::poam::PoamEligibility::NotEligible))
-        .count();
-    
-    let conditional_count = validations.iter()
-        .filter(|v| matches!(v.eligibility, crate::cmmc::poam::PoamEligibility::Conditional))
-        .count();
-    
-    let response = BatchValidationResponse {
-        total: validations.len(),
-        eligible_count,
-        not_eligible_count,
-        conditional_count,
-        validations,
-    };
-    
+    let response = service::validate_poam_batch(state.poam_validator(), &request.requirement_ids);
     Ok(FormatResponse::with_format(response, wants_toon(&headers)))
 }
 
@@ -155,12 +116,12 @@ pub async fn get_non_eligible_requirements(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<String>>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
-    
-    // Verify the document is loaded
-    state.get_document(key)
+
+    // Verify the document is loaded.
+    state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let non_eligible = state.poam_validator().get_non_eligible_requirements();
-    
+    let non_eligible = service::non_eligible(state.poam_validator());
     Ok(FormatResponse::with_format(non_eligible, wants_toon(&headers)))
 }

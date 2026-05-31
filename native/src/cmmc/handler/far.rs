@@ -5,14 +5,14 @@ use axum::{
     http::HeaderMap,
 };
 
-use crate::cmmc::model::{Element, Relationship};
-use crate::cmmc::response::{DataSummary, Family, PaginatedResponse};
-use crate::cmmc::state::CmmcState;
-use crate::cmmc::format_response::{FormatResponse, wants_toon};
-use crate::handler::error::ApiError;
+use tolerance_api_core::query::{parse_far_document_key, ElementQuery};
+use tolerance_api_core::service;
 
-use super::query::{parse_far_document_key, ElementQuery};
-use super::nist::{build_family, build_requirement};
+use crate::cmmc::format_response::{wants_toon, FormatResponse};
+use crate::cmmc::model::{Element, Relationship};
+use crate::cmmc::response::{DataSummary, Family, PaginatedResponse, Requirement};
+use crate::cmmc::state::CmmcState;
+use crate::handler::error::ApiError;
 
 /// Get summary for a specific FAR document+revision.
 #[utoipa::path(
@@ -35,23 +35,11 @@ pub async fn get_summary(
     headers: HeaderMap,
 ) -> Result<FormatResponse<DataSummary>, ApiError> {
     let key = parse_far_document_key(&document, &revision)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let summary = DataSummary {
-        document: doc.documents.first().cloned().unwrap_or_else(|| crate::cmmc::model::Document {
-            doc_identifier: String::new(),
-            name: String::new(),
-            version: String::new(),
-            website: String::new(),
-        }),
-        family_count:                doc.index.count_by_type(crate::cmmc::model::ElementType::Family),
-        requirement_count:           doc.index.count_by_type(crate::cmmc::model::ElementType::Requirement),
-        security_requirement_count:  doc.index.count_by_type(crate::cmmc::model::ElementType::SecurityRequirement),
-        relationship_count:          doc.relationships.len(),
-    };
-
-    Ok(FormatResponse::with_format(summary, wants_toon(&headers)))
+    Ok(FormatResponse::with_format(service::summary(&doc), wants_toon(&headers)))
 }
 
 /// Get all families.
@@ -75,16 +63,11 @@ pub async fn get_families(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<Family>>, ApiError> {
     let key = parse_far_document_key(&document, &revision)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let families = doc.index
-        .get_by_type(crate::cmmc::model::ElementType::Family)
-        .iter()
-        .filter_map(|&idx| doc.elements.get(idx))
-        .map(|family| build_family(family, doc.elements, state.scoring_db(), state.poam_validator()))
-        .collect();
-
+    let families = service::families(&doc, state.scoring_db(), state.poam_validator());
     Ok(FormatResponse::with_format(families, wants_toon(&headers)))
 }
 
@@ -110,22 +93,12 @@ pub async fn get_family(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Family>, ApiError> {
     let key = parse_far_document_key(&document, &revision)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let idx = doc.index
-        .get_by_identifier(&id)
-        .ok_or_else(|| ApiError::NotFound(format!("Family '{}' not found", id)))?;
-
-    let family = doc.elements
-        .get(idx)
-        .filter(|e| e.element_type == crate::cmmc::model::ElementType::Family)
-        .ok_or_else(|| ApiError::NotFound(format!("Family '{}' not found", id)))?;
-
-    Ok(FormatResponse::with_format(
-        build_family(family, doc.elements, state.scoring_db(), state.poam_validator()),
-        wants_toon(&headers)
-    ))
+    let family = service::family(&doc, state.scoring_db(), state.poam_validator(), &id)?;
+    Ok(FormatResponse::with_format(family, wants_toon(&headers)))
 }
 
 /// Get all elements.
@@ -151,32 +124,11 @@ pub async fn get_elements(
     headers: HeaderMap,
 ) -> Result<FormatResponse<PaginatedResponse<Element>>, ApiError> {
     let key = parse_far_document_key(&document, &revision)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let filtered: Vec<usize> = match (query.parse_element_type(), &query.search) {
-        (Some(et), Some(term)) => doc.index.search(term, Some(et)),
-        (Some(et), None)       => doc.index.get_by_type(et).to_vec(),
-        (None, Some(term))     => doc.index.search(term, None),
-        (None, None)           => (0..doc.elements.len()).collect(),
-    };
-
-    let total  = filtered.len();
-    let offset = query.offset();
-    let limit  = query.limit();
-
-    let items = filtered
-        .into_iter()
-        .skip(offset)
-        .take(limit)
-        .filter_map(|idx| doc.elements.get(idx))
-        .cloned()
-        .collect();
-
-    Ok(FormatResponse::with_format(
-        PaginatedResponse { data: items, total, offset, limit, has_more: offset + limit < total },
-        wants_toon(&headers),
-    ))
+    Ok(FormatResponse::with_format(service::elements(&doc, &query), wants_toon(&headers)))
 }
 
 /// Get a specific element by identifier.
@@ -201,15 +153,11 @@ pub async fn get_element(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Element>, ApiError> {
     let key = parse_far_document_key(&document, &revision)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let element = doc.index
-        .get_by_identifier(&id)
-        .and_then(|idx| doc.elements.get(idx))
-        .cloned()
-        .ok_or_else(|| ApiError::NotFound(format!("Element '{}' not found", id)))?;
-
+    let element = service::element(&doc, &id)?;
     Ok(FormatResponse::with_format(element, wants_toon(&headers)))
 }
 
@@ -232,18 +180,13 @@ pub async fn get_requirements(
     State(state): State<CmmcState>,
     Path((document, revision)): Path<(String, String)>,
     headers: HeaderMap,
-) -> Result<FormatResponse<Vec<crate::cmmc::response::Requirement>>, ApiError> {
+) -> Result<FormatResponse<Vec<Requirement>>, ApiError> {
     let key = parse_far_document_key(&document, &revision)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let requirements = doc.index
-        .get_by_type(crate::cmmc::model::ElementType::Requirement)
-        .iter()
-        .filter_map(|&idx| doc.elements.get(idx))
-        .map(|req| build_requirement(req, doc.elements, state.scoring_db(), state.poam_validator()))
-        .collect();
-
+    let requirements = service::requirements(&doc, state.scoring_db(), state.poam_validator());
     Ok(FormatResponse::with_format(requirements, wants_toon(&headers)))
 }
 
@@ -268,10 +211,11 @@ pub async fn get_relationships(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<Relationship>>, ApiError> {
     let key = parse_far_document_key(&document, &revision)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    Ok(FormatResponse::with_format(doc.relationships.to_vec(), wants_toon(&headers)))
+    Ok(FormatResponse::with_format(service::relationships(&doc), wants_toon(&headers)))
 }
 
 /// Get relationships for a specific element.
@@ -296,18 +240,10 @@ pub async fn get_element_relationships(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<Relationship>>, ApiError> {
     let key = parse_far_document_key(&document, &revision)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    doc.index
-        .get_by_identifier(&id)
-        .ok_or_else(|| ApiError::NotFound(format!("Element '{}' not found", id)))?;
-
-    let relationships = doc.relationships
-        .iter()
-        .filter(|r| r.source_element_identifier == id || r.dest_element_identifier == id)
-        .cloned()
-        .collect();
-
+    let relationships = service::element_relationships(&doc, &id)?;
     Ok(FormatResponse::with_format(relationships, wants_toon(&headers)))
 }

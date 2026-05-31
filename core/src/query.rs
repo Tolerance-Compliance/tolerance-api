@@ -1,9 +1,9 @@
-//! Query parameter types and path-parsing helpers
+//! Query parameter types and path-parsing helpers.
 
 use serde::Deserialize;
 
-use crate::cmmc::model::{ElementType, NistDocument, FarDocument, DocumentKey, DocumentRevision};
-use crate::handler::error::ApiError;
+use crate::error::CoreError;
+use crate::model::{DocumentKey, DocumentRevision, ElementType, FarDocument, NistDocument};
 
 /// Returns `Err(NotImplemented)` if `key` is an SP 800-53 document.
 ///
@@ -15,7 +15,7 @@ use crate::handler::error::ApiError;
 ///
 /// The error response includes a `hint` object with the correct replacement URLs so the
 /// caller can immediately switch to the right endpoint.
-pub fn require_cmmc_structured(key: DocumentKey) -> Result<(), ApiError> {
+pub fn require_cmmc_structured(key: DocumentKey) -> Result<(), CoreError> {
     let is_sp800_53 = matches!(
         key,
         DocumentKey::Nist {
@@ -29,14 +29,13 @@ pub fn require_cmmc_structured(key: DocumentKey) -> Result<(), ApiError> {
     }
 
     let base = format!("/v1/nist/{}/{}", key.document_string(), key.revision_string());
-    Err(ApiError::NotImplemented {
-        message: format!(
-            "The /families, /requirements, and /security-requirements endpoints use the \
+    Err(CoreError::NotImplemented {
+        message: "The /families, /requirements, and /security-requirements endpoints use the \
              SP 800-171/172 hierarchical structure (Family → Requirement → SecurityRequirement) \
              and SP 800-171-style identifiers (e.g. 03.01.01, SR-03.01.01.a). \
              SP 800-53 uses a flat control model with identifiers like AC-1 and AC-1(1). \
              Use the /elements endpoint with a ?type filter instead."
-        ),
+            .to_string(),
         hint: serde_json::json!({
             "families":             format!("{}/elements?type=family", base),
             "controls":             format!("{}/elements?type=control", base),
@@ -49,34 +48,34 @@ pub fn require_cmmc_structured(key: DocumentKey) -> Result<(), ApiError> {
     })
 }
 
-/// Parse NIST document and revision path segments into a `DocumentKey`
-pub fn parse_nist_document_key(document: &str, revision: &str) -> Result<DocumentKey, ApiError> {
+/// Parse NIST document and revision path segments into a `DocumentKey`.
+pub fn parse_nist_document_key(document: &str, revision: &str) -> Result<DocumentKey, CoreError> {
     let doc = document
         .parse::<NistDocument>()
-        .map_err(|e| ApiError::BadRequest(e))?;
+        .map_err(CoreError::BadRequest)?;
     let rev = revision
         .parse::<DocumentRevision>()
-        .map_err(|e| ApiError::BadRequest(e))?;
+        .map_err(CoreError::BadRequest)?;
 
     match (doc, rev) {
         (NistDocument::Sp800053 | NistDocument::Sp800053A | NistDocument::Sp800053B,
          DocumentRevision::V1 | DocumentRevision::V2) => {
-            return Err(ApiError::BadRequest(
+            return Err(CoreError::BadRequest(
                 "SP 800-53 documents use revisions, not versions. Use r5 (e.g. /sp800-53/r5).".to_string(),
             ));
         }
         (NistDocument::Sp800171, DocumentRevision::V1 | DocumentRevision::V2) => {
-            return Err(ApiError::BadRequest(
+            return Err(CoreError::BadRequest(
                 "SP 800-171 uses revisions, not versions. Use r1, r2, or r3 (e.g. /sp800-171/r3).".to_string(),
             ));
         }
         (NistDocument::Sp800172, DocumentRevision::Rev1 | DocumentRevision::Rev2 | DocumentRevision::Rev3 | DocumentRevision::Rev5) => {
-            return Err(ApiError::BadRequest(
+            return Err(CoreError::BadRequest(
                 "SP 800-172 uses versions, not revisions. Use v1 (e.g. /sp800-172/v1).".to_string(),
             ));
         }
         (NistDocument::Sp800172A, DocumentRevision::Rev1 | DocumentRevision::Rev2 | DocumentRevision::Rev3 | DocumentRevision::Rev5) => {
-            return Err(ApiError::BadRequest(
+            return Err(CoreError::BadRequest(
                 "SP 800-172A uses versions, not revisions. Use v1 (e.g. /sp800-172a/v1).".to_string(),
             ));
         }
@@ -86,39 +85,38 @@ pub fn parse_nist_document_key(document: &str, revision: &str) -> Result<Documen
     Ok(DocumentKey::nist(doc, rev))
 }
 
-/// Parse FAR document and revision path segments into a `DocumentKey`
-pub fn parse_far_document_key(document: &str, revision: &str) -> Result<DocumentKey, ApiError> {
+/// Parse FAR document and revision path segments into a `DocumentKey`.
+pub fn parse_far_document_key(document: &str, revision: &str) -> Result<DocumentKey, CoreError> {
     let doc = document
         .parse::<FarDocument>()
-        .map_err(|e| ApiError::BadRequest(e))?;
+        .map_err(CoreError::BadRequest)?;
     let rev = revision
         .parse::<DocumentRevision>()
-        .map_err(|e| ApiError::BadRequest(e))?;
+        .map_err(CoreError::BadRequest)?;
 
-    match (doc, rev) {
-        (FarDocument::Far52_204_21, DocumentRevision::Rev2 | DocumentRevision::Rev3 | DocumentRevision::V1) => {
-            return Err(ApiError::BadRequest(
-                "FAR 52.204-21 uses v2 (e.g. /far/52.204-21/v2).".to_string(),
-            ));
-        }
-        _ => {}
+    if let (FarDocument::Far52_204_21, DocumentRevision::Rev2 | DocumentRevision::Rev3 | DocumentRevision::V1) =
+        (doc, rev)
+    {
+        return Err(CoreError::BadRequest(
+            "FAR 52.204-21 uses v2 (e.g. /far/52.204-21/v2).".to_string(),
+        ));
     }
 
     Ok(DocumentKey::far(doc, rev))
 }
 
-/// Query parameters for filtering elements with pagination
-#[derive(Debug, Deserialize, utoipa::IntoParams)]
+/// Query parameters for filtering elements with pagination.
+#[derive(Debug, Default, Deserialize, utoipa::IntoParams)]
 #[into_params(parameter_in = Query)]
 pub struct ElementQuery {
-    /// Filter by element type
+    /// Filter by element type.
     #[serde(rename = "type")]
     pub element_type: Option<String>,
-    /// Search in title or text
+    /// Search in title or text.
     pub search: Option<String>,
-    /// Maximum number of results (default: 100, max: 5000)
+    /// Maximum number of results (default: 100, max: 5000).
     pub limit: Option<usize>,
-    /// Offset for pagination (default: 0)
+    /// Offset for pagination (default: 0).
     pub offset: Option<usize>,
 }
 

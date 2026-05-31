@@ -1,4 +1,3 @@
-pub mod query;
 pub mod nist;
 pub mod far;
 pub mod poam;
@@ -30,4 +29,4 @@ pub use poam::{
     validate_poam_batch,
     get_non_eligible_requirements,
 };
-pub use query::ElementQuery;
+pub use tolerance_api_core::query::ElementQuery;
