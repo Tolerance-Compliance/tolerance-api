@@ -1,0 +1,15 @@
+name = "tolerance-api"
+main = "build/worker/shim.mjs"
+compatibility_date = "2026-05-01"
+
+[build]
+# worker-build already runs a compatible wasm-opt internally; do NOT append a
+# manual wasm-opt step (the system Binaryen rejects modern wasm features).
+command = "cargo install -q worker-build && worker-build --release"
+
+# Workers KV namespace ("reference-docs") holding all pre-rendered document
+# fragments. The `binding` is the in-code handle (env.kv("DOCS")); it is
+# independent of the namespace title.
+[[kv_namespaces]]
+binding = "DOCS"
+id = "adf75110d71145f7b4aeff061e2f675b"

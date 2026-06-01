@@ -3,3 +3,8 @@
 .idea
 
 Cargo.lock
+
+# Generated KV bulk-put payloads from `cargo run --bin ingest`
+/kv-bulk
+# Worker build output (worker-build)
+/build

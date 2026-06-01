@@ -140,7 +140,7 @@ impl SearchIndex {
     }
 }
 
-fn tokenize(text: &str) -> Vec<String> {
+pub fn tokenize(text: &str) -> Vec<String> {
     text.split(|c: char| !c.is_alphanumeric())
         .filter(|s: &&str| !s.is_empty() && s.len() > 1)
         .map(|s: &str| s.to_string())

@@ -4,27 +4,40 @@ authors = [ "Sam Sporidis <samsporidissoftware@protonmail.com>" ]
 version = "0.1.34"
 edition = "2024"
 
-[[bin]]
-name = "tolerance-api"
-path = "src/main.rs"
-
 [lib]
 name = "tolerance_api"
 path = "src/lib.rs"
+# cdylib: the wasm Worker artifact. rlib: so the native `ingest` bin can link the lib.
+crate-type = ["cdylib", "rlib"]
+
+# Offline ingest tool (native target). Builds the KV bulk-put payloads.
+[[bin]]
+name = "ingest"
+path = "src/bin/ingest.rs"
 
 [dependencies]
-axum = { version = "0.7", features = ["macros"] }
-tokio = { version = "1", features = ["full"] }
-tower-http = { version = "0.6", features = ["cors", "trace", "limit"] }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+# Portable (compile on both native and wasm32):
+axum = { version = "0.7", default-features = false, features = ["query", "json", "macros"] }
+tower-http = { version = "0.6", features = ["cors"] }
+tower-service = "0.3"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "postgres", "time", "migrate", "ipnetwork"] }
-time = { version = "0.3", features = ["serde", "macros", "formatting", "parsing"] }
 thiserror = "2"
-chrono = { version = "0.4", features = ["serde"] }
-dotenvy = "0.15"
 utoipa = { version = "5", features = ["axum_extras"] }
-utoipa-swagger-ui = { version = "9", features = ["axum", "reqwest"] }
-toon-format = "0.4.3"
+# default features pull in a CLI/TUI stack (arboard, ratatui, crossterm) that
+# does not target wasm; we only need the library encoder.
+toon-format = { version = "0.4.3", default-features = false }
+
+# Worker runtime only (wasm32). Kept out of the native `ingest` build so the
+# wasm-only `worker` crate never compiles for the host target.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+worker = { version = "0.8", features = ["http"] }
+wasm-bindgen = "0.2"
+console_error_panic_hook = "0.1"
+
+# Size optimizations for the wasm artifact (Workers bundle-size limits).
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1
+opt-level = "s"

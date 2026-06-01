@@ -58,19 +58,13 @@ pub struct ScoringDatabase {
 }
 
 impl ScoringDatabase {
-    /// Load from JSON file
+    /// Load scoring data. The file is small (~21 KB) and static, so it is
+    /// bundled into the binary at compile time -- no filesystem or KV access.
     pub fn new() -> Self {
-        let json = std::fs::read_to_string("data/cmmc-scoring.json")
-            .unwrap_or_else(|e| {
-                tracing::warn!("Can't load scoring file: {}", e);
-                String::from("{\"requirements\":{}}")
-            });
+        const SCORING_JSON: &str = include_str!("../../data/cmmc-scoring.json");
 
-        let file: ScoringFile = serde_json::from_str(&json)
-            .unwrap_or_else(|e| {
-                tracing::warn!("Can't parse scoring JSON: {}", e);
-                ScoringFile { requirements: HashMap::new() }
-            });
+        let file: ScoringFile = serde_json::from_str(SCORING_JSON)
+            .unwrap_or_else(|_| ScoringFile { requirements: HashMap::new() });
 
         let mut scores = HashMap::new();
         for (id, score_json) in file.requirements {

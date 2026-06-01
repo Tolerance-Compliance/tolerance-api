@@ -1,7 +1,7 @@
 pub mod query;
 pub mod nist;
-pub mod far;
 pub mod poam;
+pub(crate) mod util;
 
 pub use nist::{
     get_documents,
@@ -14,16 +14,6 @@ pub use nist::{
     get_security_requirements as get_nist_security_requirements,
     get_relationships         as get_nist_relationships,
     get_element_relationships as get_nist_element_relationships,
-};
-pub use far::{
-    get_summary               as get_far_summary,
-    get_families              as get_far_families,
-    get_family                as get_far_family,
-    get_elements              as get_far_elements,
-    get_element               as get_far_element,
-    get_requirements          as get_far_requirements,
-    get_relationships         as get_far_relationships,
-    get_element_relationships as get_far_element_relationships,
 };
 pub use poam::{
     validate_poam_requirement,

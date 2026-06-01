@@ -27,15 +27,6 @@ use crate::constant::OPENAPI_CACHE_DURATION;
         crate::cmmc::handler::poam::validate_poam_requirement,
         crate::cmmc::handler::poam::validate_poam_batch,
         crate::cmmc::handler::poam::get_non_eligible_requirements,
-        // FAR endpoints
-        crate::cmmc::handler::far::get_summary,
-        crate::cmmc::handler::far::get_families,
-        crate::cmmc::handler::far::get_family,
-        crate::cmmc::handler::far::get_elements,
-        crate::cmmc::handler::far::get_element,
-        crate::cmmc::handler::far::get_requirements,
-        crate::cmmc::handler::far::get_relationships,
-        crate::cmmc::handler::far::get_element_relationships,
     ),
     components(
         schemas(
@@ -55,7 +46,7 @@ use crate::constant::OPENAPI_CACHE_DURATION;
             crate::cmmc::model::DocumentRevision,
             crate::cmmc::model::NistDocumentKey,
             crate::cmmc::model::DocumentKey,
-            crate::cmmc::handler::nist::DocumentInfo,
+            crate::cmmc::response::DocumentInfo,
             // Scoring and POA&M types
             crate::cmmc::scoring::RequirementScore,
             crate::cmmc::scoring::CmmcLevel,

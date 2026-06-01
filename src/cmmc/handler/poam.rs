@@ -8,12 +8,27 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use crate::cmmc::poam::PoamValidation;
-use crate::cmmc::state::CmmcState;
+use crate::cmmc::poam::{PoamValidation, PoamValidator};
 use crate::cmmc::format_response::{FormatResponse, wants_toon};
 use crate::handler::error::ApiError;
+use crate::kv::store::AppState;
 
 use super::query::parse_nist_document_key;
+use super::util::doc_loaded;
+
+/// Build the POA&M validator from the bundled scoring database. Cheap (parses
+/// a ~21 KB embedded JSON); no KV or filesystem access.
+fn validator() -> PoamValidator {
+    PoamValidator::default()
+}
+
+async fn ensure_doc_loaded(state: &AppState, key: crate::cmmc::model::DocumentKey) -> Result<(), ApiError> {
+    if doc_loaded(state, key).await? {
+        Ok(())
+    } else {
+        Err(ApiError::NotFound(format!("Document {} not loaded", key)))
+    }
+}
 
 /// Request body for batch POA&M validation
 #[derive(Debug, Deserialize, ToSchema)]
@@ -57,19 +72,17 @@ pub struct BatchValidationResponse {
     ),
     tag = "POA&M"
 )]
+#[worker::send]
 pub async fn validate_poam_requirement(
-    State(state): State<CmmcState>,
+    State(state): State<AppState>,
     Path((document, revision, requirement_id)): Path<(String, String, String)>,
     headers: HeaderMap,
 ) -> Result<FormatResponse<PoamValidation>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
-    
-    // Verify the document is loaded
-    state.get_document(key)
-        .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
+    ensure_doc_loaded(&state, key).await?;
 
-    let validation = state.poam_validator().validate(&requirement_id);
-    
+    let validation = validator().validate(&requirement_id);
+
     Ok(FormatResponse::with_format(validation, wants_toon(&headers)))
 }
 
@@ -93,19 +106,17 @@ pub async fn validate_poam_requirement(
     ),
     tag = "POA&M"
 )]
+#[worker::send]
 pub async fn validate_poam_batch(
-    State(state): State<CmmcState>,
+    State(state): State<AppState>,
     Path((document, revision)): Path<(String, String)>,
     headers: HeaderMap,
     Json(request): Json<BatchValidationRequest>,
 ) -> Result<FormatResponse<BatchValidationResponse>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
-    
-    // Verify the document is loaded
-    state.get_document(key)
-        .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
+    ensure_doc_loaded(&state, key).await?;
 
-    let validations = state.poam_validator().validate_batch(&request.requirement_ids);
+    let validations = validator().validate_batch(&request.requirement_ids);
     
     let eligible_count = validations.iter()
         .filter(|v| matches!(v.eligibility, crate::cmmc::poam::PoamEligibility::Eligible))
@@ -149,18 +160,16 @@ pub async fn validate_poam_batch(
     ),
     tag = "POA&M"
 )]
+#[worker::send]
 pub async fn get_non_eligible_requirements(
-    State(state): State<CmmcState>,
+    State(state): State<AppState>,
     Path((document, revision)): Path<(String, String)>,
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<String>>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
-    
-    // Verify the document is loaded
-    state.get_document(key)
-        .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
+    ensure_doc_loaded(&state, key).await?;
 
-    let non_eligible = state.poam_validator().get_non_eligible_requirements();
-    
+    let non_eligible = validator().get_non_eligible_requirements();
+
     Ok(FormatResponse::with_format(non_eligible, wants_toon(&headers)))
 }

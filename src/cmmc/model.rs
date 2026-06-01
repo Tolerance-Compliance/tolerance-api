@@ -342,6 +342,46 @@ pub enum ElementType {
     Unknown,
 }
 
+impl ElementType {
+    /// Stable snake_case slug used in KV bucket keys. Matches the strings
+    /// accepted by `ElementQuery::parse_element_type`.
+    pub fn slug(self) -> &'static str {
+        match self {
+            ElementType::Family => "family",
+            ElementType::Requirement => "requirement",
+            ElementType::SecurityRequirement => "security_requirement",
+            ElementType::Discussion => "discussion",
+            ElementType::Assessment => "assessment",
+            ElementType::AdversaryEffect => "adversary_effect",
+            ElementType::ProtectionStrategy => "protection_strategy",
+            ElementType::Effect => "effect",
+            ElementType::Tactic => "tactic",
+            ElementType::Impact => "impact",
+            ElementType::ExpectedResult => "expected_result",
+            ElementType::Example => "example",
+            ElementType::Sort => "sort",
+            ElementType::ReferenceItem => "reference_item",
+            ElementType::Determination => "determination",
+            ElementType::Examine => "examine",
+            ElementType::Interview => "interview",
+            ElementType::Test => "test",
+            ElementType::Odp => "odp",
+            ElementType::OdpStatement => "odp_statement",
+            ElementType::OdpType => "odp_type",
+            ElementType::WithdrawReason => "withdraw_reason",
+            ElementType::Control => "control",
+            ElementType::ControlEnhancement => "control_enhancement",
+            ElementType::ControlStatement => "control_statement",
+            ElementType::ControlNameSort => "control_name_sort",
+            ElementType::SecurityBaseline => "security_baseline",
+            ElementType::PrivacyBaseline => "privacy_baseline",
+            ElementType::Reference => "reference",
+            ElementType::PublicComment => "public_comment",
+            ElementType::Unknown => "unknown",
+        }
+    }
+}
+
 /// A single element (family, requirement, or security requirement)
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Element {

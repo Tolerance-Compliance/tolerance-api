@@ -1,12 +1,25 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use super::model::Document;
 use super::scoring::RequirementScore;
 use super::poam::PoamValidation;
 
+/// Document descriptor returned by `GET /v1/nist/documents`.
+#[derive(Debug, Clone, Serialize, serde::Deserialize, ToSchema)]
+pub struct DocumentInfo {
+    /// URL path identifier (e.g., "sp800-171/r3")
+    pub id: String,
+    /// Human-readable name
+    pub name: String,
+    /// NIST document identifier
+    pub document: String,
+    /// Revision string
+    pub revision: String,
+}
+
 /// A family with its nested requirements (API response)
-#[derive(Debug, Clone, Serialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Family {
     pub identifier: String,
     pub title: String,
@@ -14,7 +27,7 @@ pub struct Family {
 }
 
 /// A requirement with its security requirements (API response)
-#[derive(Debug, Clone, Serialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Requirement {
     pub identifier: String,
     pub title: String,
@@ -29,7 +42,7 @@ pub struct Requirement {
 }
 
 /// A security requirement with discussion and assessment (API response)
-#[derive(Debug, Clone, Serialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct SecurityRequirement {
     pub identifier: String,
     pub title: String,
@@ -45,7 +58,7 @@ pub struct SecurityRequirement {
 }
 
 /// Summary statistics for the dataset
-#[derive(Debug, Clone, Serialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct DataSummary {
     pub document: Document,
     pub family_count: usize,
@@ -55,7 +68,7 @@ pub struct DataSummary {
 }
 
 /// Paginated response wrapper
-#[derive(Debug, Clone, Serialize, ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct PaginatedResponse<T> {
     pub data:     Vec<T>,
     pub total:    usize,

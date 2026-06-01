@@ -27,6 +27,6 @@ pub async fn health_check() -> Json<Value> {
         "status":    StatusCode::OK.as_u16(),
         "service":   constant::SERVICE_NAME,
         "version":   constant::VERSION,
-        "timestamp": chrono::Utc::now().timestamp_millis()
+        "timestamp": worker::Date::now().as_millis()
     }))
 }

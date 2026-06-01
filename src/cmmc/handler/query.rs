@@ -2,7 +2,7 @@
 
 use serde::Deserialize;
 
-use crate::cmmc::model::{ElementType, NistDocument, FarDocument, DocumentKey, DocumentRevision};
+use crate::cmmc::model::{ElementType, NistDocument, DocumentKey, DocumentRevision};
 use crate::handler::error::ApiError;
 
 /// Returns `Err(NotImplemented)` if `key` is an SP 800-53 document.
@@ -84,27 +84,6 @@ pub fn parse_nist_document_key(document: &str, revision: &str) -> Result<Documen
     }
 
     Ok(DocumentKey::nist(doc, rev))
-}
-
-/// Parse FAR document and revision path segments into a `DocumentKey`
-pub fn parse_far_document_key(document: &str, revision: &str) -> Result<DocumentKey, ApiError> {
-    let doc = document
-        .parse::<FarDocument>()
-        .map_err(|e| ApiError::BadRequest(e))?;
-    let rev = revision
-        .parse::<DocumentRevision>()
-        .map_err(|e| ApiError::BadRequest(e))?;
-
-    match (doc, rev) {
-        (FarDocument::Far52_204_21, DocumentRevision::Rev2 | DocumentRevision::Rev3 | DocumentRevision::V1) => {
-            return Err(ApiError::BadRequest(
-                "FAR 52.204-21 uses v2 (e.g. /far/52.204-21/v2).".to_string(),
-            ));
-        }
-        _ => {}
-    }
-
-    Ok(DocumentKey::far(doc, rev))
 }
 
 /// Query parameters for filtering elements with pagination
