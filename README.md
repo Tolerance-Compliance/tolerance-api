@@ -7,7 +7,7 @@ The point of this API, then, was to serve the user that same information through
 
 Documents are loaded from the official NIST CPRT JSON exports at startup, indexed in memory, and served as a clean read-only JSON API. No database required.
 
-A Swagger UI is available at [`http://localhost:3000/`](http://localhost:3000/) and the raw OpenAPI spec at [`/api-docs/openapi.json`](http://localhost:3000/api-docs/openapi.json).
+A Swagger UI is available at [`http://localhost:3000/`](http://localhost:3000/) and the raw OpenAPI spec at [`/api-docs/openapi.json`](http://localhost:3000/api-docs/openapi.json) — both generated at compile time by [utoipa](#api-documentation-openapi--utoipa). The same catalog is also exposed as [MCP tools](#mcp-server) at `POST /mcp` for AI assistants.
 
 ---
 
@@ -80,19 +80,83 @@ Errors always return JSON, and errors use typical HTTP failure codes. See [the H
 
 ---
 
+## API Documentation (OpenAPI / utoipa)
+
+The OpenAPI 3 specification is generated **at compile time** with
+[`utoipa`](https://docs.rs/utoipa): every REST handler carries a `#[utoipa::path(...)]`
+annotation (method, path, params, request/response bodies, tag), every DTO derives
+`utoipa::ToSchema`, and the `ApiDoc` struct in `src/doc/openapi.rs` assembles them into the
+spec. Because the docs are derived from the same code that serves the routes, they cannot
+drift from the implementation.
+
+| Where | What |
+|-------|------|
+| [`GET /`](http://localhost:3000/) | Interactive Swagger UI (custom-branded, served from `src/doc/swagger.rs`) |
+| [`GET /api-docs/openapi.json`](http://localhost:3000/api-docs/openapi.json) | Raw OpenAPI 3 spec (cached 5 min) |
+
+Endpoints are grouped under four tags: **Health**, **NIST**, **POA&M**, and **FAR**. The
+spec's `info` description also documents the supported document/revision matrix, the
+171A/172A assessment-guide element types (`determination`, `examine`, `interview`, `test`,
+ODP types), and `text/toon` content negotiation — so the Swagger UI is self-contained for
+new consumers.
+
+**Adding an endpoint to the docs:** annotate the handler with `#[utoipa::path(...)]`,
+derive `ToSchema` on any new request/response types, then register both in `ApiDoc`
+(`paths(...)` and `components(schemas(...))`) in `src/doc/openapi.rs`.
+
+> [!NOTE]
+> The MCP endpoint (`POST /mcp`, below) is intentionally *not* in the OpenAPI spec — it is
+> a JSON-RPC surface, and MCP clients discover its capabilities through the protocol itself
+> (`tools/list` / `server/discover`), not through OpenAPI.
+
+---
+
 ## MCP Server
 
-The same catalog is exposed as an MCP (Model Context Protocol) tool surface at `POST /mcp`,
-so AI assistants (Cursor, Claude, etc.) can query NIST/FAR text and CMMC POA&M rules as
-native tools. It runs in-process over the same in-memory indexes as the REST API — read-only,
-public standards data only.
+The same catalog is exposed as an **MCP (Model Context Protocol)** tool surface at
+`POST /mcp`, so AI assistants (Cursor, Claude, etc.) can query NIST/FAR text and CMMC
+POA&M rules as native tools. It runs **in-process** over the same in-memory indexes as the
+REST API — no separate service, no HTTP self-calls, read-only public standards data only.
 
-Seven tools: `list_documents`, `get_summary`, `search_elements`, `get_element`,
-`get_element_relationships`, `validate_poam`, `get_non_eligible_requirements`.
-Tool results are TOON-encoded text. Both protocol eras are supported: the legacy
-`initialize` handshake (2024-11-05 … 2025-11-25) and the stateless 2026-07-28 style
-(`server/discover`, per-request `_meta`, SEP-2243 `Mcp-Method`/`Mcp-Name` header
-validation). See `src/mcp/mod.rs` for the full protocol posture.
+### Tools
+
+| Tool | Arguments | Returns |
+|------|-----------|---------|
+| `list_documents` | — | Every loaded document/revision pair with display names. Call first to discover valid arguments. |
+| `get_summary` | `document`, `revision` | Document metadata + element counts by type. |
+| `search_elements` | `document`, `revision`, `query`, `type?`, `limit?` | Full-text search over identifiers, titles, and text (inverted index; default 20, max 200 results). |
+| `get_element` | `document`, `revision`, `identifier` | One element by exact ID, with relationship-linked statement / discussion / examine / interview / test text resolved so a single call returns the full official text. |
+| `get_element_relationships` | `document`, `revision`, `identifier` | Every relationship edge the element participates in (e.g. 171 ↔ 171A objective mapping). |
+| `validate_poam` | `document`, `revision`, `requirement_ids[]` | CMMC POA&M eligibility per requirement, with scoring rationale and counts. |
+| `get_non_eligible_requirements` | `document`, `revision` | Requirements that can never be deferred to a POA&M. |
+
+Tool results are **TOON-encoded text** (the same LLM-optimized format as `Accept: text/toon`),
+keeping token usage low for the consuming model. Unknown tools and bad arguments come back
+as `isError` tool results per spec, not protocol errors.
+
+### Protocol support
+
+Both protocol eras are supported (the server is stateless by construction, so this is cheap):
+
+- **Legacy handshake** (`2024-11-05` … `2025-11-25`, today's Cursor/Claude): `initialize`
+  is answered with a negotiated version; nothing session-like is required afterwards.
+- **Stateless 2026-07-28**: `server/discover` for capability discovery, per-request `_meta`,
+  and SEP-2243 `Mcp-Method` / `Mcp-Name` / `MCP-Protocol-Version` header–body validation —
+  a mismatch is rejected with `400` and a JSON-RPC error. Headers are validated when present
+  but not required, so legacy clients keep working.
+
+Notifications (requests without an `id`) return `202 Accepted` with no body. Responses are
+always JSON objects — no SSE, since every tool answers immediately from memory.
+
+```bash
+# List the available tools
+curl -s http://localhost:3000/mcp -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+
+# Call a tool
+curl -s http://localhost:3000/mcp -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"get_element","arguments":{"document":"sp800-171","revision":"r3","identifier":"03.05.03"}}}'
+```
 
 Cursor config (`.cursor/mcp.json`):
 
@@ -103,6 +167,27 @@ Cursor config (`.cursor/mcp.json`):
   }
 }
 ```
+
+### Module layout & extending
+
+The MCP code is deliberately modular (`src/mcp/`):
+
+```
+src/mcp/
+├── mod.rs            module map + wiring
+├── constants.rs      every version, header name, limit, description string
+├── handler.rs        axum entry point: parse → validate → dispatch
+├── headers.rs        SEP-2243 header/body validation
+├── discovery.rs      initialize + server/discover responses
+├── protocol/         wire types (JSON-RPC envelope, tool shapes)
+├── tools/            the registry — one file per tool, shared helpers in support.rs
+└── tests/            fixtures + tool and protocol tests, mirroring the source layout
+```
+
+**Adding a tool:** create one file in `src/mcp/tools/` exposing `definition()` and
+`call(state, args)`, then add one line to the `REGISTRY` table in `src/mcp/tools/mod.rs`.
+`tools/list` and dispatch both derive from the registry, so they can never drift apart
+(a test asserts every registry name matches its definition).
 
 ---
 
