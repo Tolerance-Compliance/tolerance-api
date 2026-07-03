@@ -106,9 +106,13 @@ impl ScoringDatabase {
         })
     }
 
-    /// Get score for a requirement
+    /// Get score for a requirement. Accepts both Rev 2 (`3.5.3`) and Rev 3
+    /// (`03.05.03`) identifier forms — the table is keyed by the Rev 3 form.
     pub fn get_score(&self, requirement_id: &str) -> Option<&RequirementScore> {
-        self.scores.get(requirement_id)
+        if let Some(score) = self.scores.get(requirement_id) {
+            return Some(score);
+        }
+        normalize_requirement_id(requirement_id).and_then(|id| self.scores.get(&id))
     }
 
     /// Get all requirements for a CMMC level
@@ -117,6 +121,11 @@ impl ScoringDatabase {
             .iter()
             .filter(|(_, score)| score.cmmc_level == level)
             .collect()
+    }
+
+    /// All requirement identifiers in the scoring table (Rev 3 form).
+    pub fn all_requirement_ids(&self) -> Vec<String> {
+        self.scores.keys().cloned().collect()
     }
 
     /// Get all foundational requirements
@@ -143,6 +152,21 @@ impl Default for ScoringDatabase {
     }
 }
 
+/// Normalize a requirement identifier to the zero-padded Rev 3 form
+/// (`3.5.3` → `03.05.03`). Returns `None` for anything that is not three
+/// numeric dot-separated segments (e.g. 800-172 ids like `3.1.1e`).
+pub fn normalize_requirement_id(id: &str) -> Option<String> {
+    let parts: Vec<&str> = id.split('.').collect();
+    if parts.len() != 3 {
+        return None;
+    }
+    let mut nums = [0u8; 3];
+    for (i, p) in parts.iter().enumerate() {
+        nums[i] = p.parse::<u8>().ok()?;
+    }
+    Some(format!("{:02}.{:02}.{:02}", nums[0], nums[1], nums[2]))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -165,7 +189,26 @@ mod tests {
     #[test]
     fn test_calculate_points() {
         let db = ScoringDatabase::new();
-        let total = db.calculate_total_points(&vec!["03.01.01".into(), "03.01.02".into()]);
-        assert_eq!(total, 6); // 3 + 3
+        let total = db.calculate_total_points(&["03.01.01".into(), "03.01.02".into()]);
+        assert_eq!(total, 10); // 5 + 5 per DoD Assessment Methodology Annex A
+    }
+
+    #[test]
+    fn test_total_weight_matches_sprs_floor() {
+        // Annex A: max deduction 313, so the score floor is 110 - 313 = -203.
+        let db = ScoringDatabase::new();
+        let all: Vec<String> = db.scores.keys().cloned().collect();
+        assert_eq!(all.len(), 110);
+        assert_eq!(db.calculate_total_points(&all), 313);
+    }
+
+    #[test]
+    fn test_r2_form_lookup_normalizes() {
+        let db = ScoringDatabase::new();
+        let r2 = db.get_score("3.5.3").expect("r2 form should resolve");
+        let r3 = db.get_score("03.05.03").expect("r3 form should resolve");
+        assert_eq!(r2.point_value, r3.point_value);
+        assert_eq!(r2.point_value, 5);
+        assert!(db.get_score("3.1.1e").is_none()); // 800-172 form is not SPRS
     }
 }

@@ -321,7 +321,7 @@ curl http://localhost:3000/v1/nist/sp800-171/r3/families/03.01
           "assessment": "..."
         }
       ],
-      "score": { "cmmc_level": "1", "point_value": 3, "is_foundational": true, "priority": "High" },
+      "score": { "cmmc_level": "1", "point_value": 5, "is_foundational": true, "priority": "High" },
       "poam_validation": { "requirement_id": "03.01.01", "eligibility": "NotEligible", ... }
     }
   ]
@@ -447,30 +447,41 @@ curl http://localhost:3000/v1/nist/sp800-171/r3/elements/03.01.01/relationships
 
 ### POA&M Validation
 
-Validates whether NIST requirements can be placed on a Plan of Action & Milestones.
+Validates whether NIST requirements can be placed on a Plan of Action & Milestones,
+per **32 CFR §170.21(a)(2)** and the NIST SP 800-171 DoD Assessment Methodology
+v1.2.1 (Annex A SPRS weights: 5/3/1, max deduction 313, score floor −203).
+Identifiers are accepted in both Rev 2 (`3.5.3`) and Rev 3 (`03.05.03`) form.
 
 **Rules:**
-- **Level 1 foundational** → `NotEligible` (must implement immediately)
-- **Level 1 non-foundational** → `Conditional` (exec approval + 90 days)
-- **Level 2 high-priority** → `Conditional` (compensating controls + 180 days)
-- **Level 2 medium/low** → `Eligible` (remediation plan + 365 days)
-- **Level 3** → `Eligible` (risk acceptance + 365 days)
+- **5- and 3-point requirements** → `NotEligible` (must be MET at assessment time)
+- **Excluded one-pointers** (03.01.20, 03.01.22, 03.10.03/04/05, named by
+  §170.21(a)(2)(iii)) → `NotEligible`
+- **03.05.03 (MFA)** → `NotEligible`, always — even partially implemented
+- **03.13.11 (FIPS crypto)** → `Conditional` — eligible only in the partial
+  (−3) tier: encryption deployed but not yet FIPS-validated
+- **03.12.04 (SSP)** → `NotEligible` (unscored; its absence blocks assessment)
+- **Remaining 1-pointers** → `Eligible` (remediation plan + 180-day close-out)
+- **Out-of-SPRS-scope ids** (Rev-3-only additions, 800-172) → `Conditional`
+  with consult-your-assessor guidance
+
+This model is kept in agreement with `tolerance-ssp-service/src/poam/reference.rs`
+(export-time validator) and `tolerance-dashboard/lib/poam-eligibility.ts` (UI).
 
 #### Validate a single requirement
 
 - **`GET` `/v1/nist/:document/:revision/poam/validate/:requirement_id`**
 
 ```bash
-curl http://localhost:3000/v1/nist/sp800-171/r3/poam/validate/03.01.01
+curl http://localhost:3000/v1/nist/sp800-171/r3/poam/validate/03.05.03
 ```
 
 ```json
 {
-  "requirement_id": "03.01.01",
+  "requirement_id": "03.05.03",
   "eligibility": "NotEligible",
-  "reason": "FoundationalRequirement",
+  "reason": "CriticalControl",
   "conditions": [],
-  "guidance": "This is a foundational CMMC Level 1 requirement and must be implemented immediately..."
+  "guidance": "Multifactor authentication (3.5.3) is never POA&M-eligible under 32 CFR §170.21(a)(2)..."
 }
 ```
 
