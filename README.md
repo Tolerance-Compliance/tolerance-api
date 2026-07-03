@@ -163,7 +163,7 @@ Cursor config (`.cursor/mcp.json`):
 ```json
 {
   "mcpServers": {
-    "tolerance-api": { "url": "https://<host>/mcp" }
+      "tolerance-api": { "url": "https://api.tolerance.app/mcp" }
   }
 }
 ```
