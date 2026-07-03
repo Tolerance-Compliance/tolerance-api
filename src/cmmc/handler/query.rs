@@ -176,6 +176,17 @@ impl ElementQuery {
                 "impact" => Some(ElementType::Impact),
                 "expected_result" => Some(ElementType::ExpectedResult),
                 "example" => Some(ElementType::Example),
+                // Assessment-guide types (171A / 172A; also present in 800-53A)
+                "determination" => Some(ElementType::Determination),
+                "examine" => Some(ElementType::Examine),
+                "interview" => Some(ElementType::Interview),
+                "test" => Some(ElementType::Test),
+                "odp" => Some(ElementType::Odp),
+                "odp_statement" => Some(ElementType::OdpStatement),
+                "odp_type" => Some(ElementType::OdpType),
+                "sort" => Some(ElementType::Sort),
+                "reference_item" => Some(ElementType::ReferenceItem),
+                "withdraw_reason" => Some(ElementType::WithdrawReason),
                 // SP 800-53 types
                 "control" => Some(ElementType::Control),
                 "control_enhancement" => Some(ElementType::ControlEnhancement),

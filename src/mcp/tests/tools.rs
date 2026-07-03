@@ -51,6 +51,28 @@ fn search_elements_finds_mfa() {
 }
 
 #[test]
+fn search_elements_accepts_assessment_guide_types() {
+    let state = test_state();
+    let result = call(
+        &state,
+        "search_elements",
+        json!({
+            "document": "sp800-171",
+            "revision": "r3",
+            "query": "multi-factor",
+            "type": "test",
+            "limit": 5
+        }),
+    );
+    assert!(!result.is_error, "unexpected error: {}", text(&result));
+    assert!(
+        text(&result).contains("T-03.05.03"),
+        "expected assessment test element in: {}",
+        text(&result)
+    );
+}
+
+#[test]
 fn search_elements_rejects_unknown_type() {
     let state = test_state();
     let result = call(

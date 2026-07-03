@@ -363,7 +363,7 @@ Raw elements with **search**, **type filtering**, and **pagination**.
 
 | Query Param | Type     | Default | Description |
 |-------------|----------|---------|-------------|
-| `type`      | `string` | —       | **800-171/172:** `family`, `requirement`, `security_requirement`, `discussion`, `assessment`, `adversary_effect`, `protection_strategy`, `effect`, `tactic`, `impact`, `expected_result`, `example` — **800-53:** `control`, `control_enhancement`, `control_statement`, `security_baseline`, `privacy_baseline`, `reference`, `public_comment` |
+| `type`      | `string` | —       | **800-171/172:** `family`, `requirement`, `security_requirement`, `discussion`, `assessment`, `adversary_effect`, `protection_strategy`, `effect`, `tactic`, `impact`, `expected_result`, `example` — **Assessment guides (171A/172A/53A):** `determination`, `examine`, `interview`, `test`, `odp`, `odp_statement`, `odp_type`, `sort`, `reference_item`, `withdraw_reason` — **800-53:** `control`, `control_enhancement`, `control_statement`, `security_baseline`, `privacy_baseline`, `reference`, `public_comment` |
 | `search`    | `string` | —       | Full-text search in title and text |
 | `limit`     | `int`    | `100`   | Max results (hard cap: `1000`) |
 | `offset`    | `int`    | `0`     | Pagination offset |

@@ -21,7 +21,7 @@ pub fn definition() -> ToolDefinition {
                 "document": { "type": "string", "description": DOC_PARAM_DESC },
                 "revision": { "type": "string", "description": REV_PARAM_DESC },
                 "query":    { "type": "string", "description": "Search term, e.g. `multifactor authentication`" },
-                "type":     { "type": "string", "description": "Optional element type filter: `family`, `requirement`, `security_requirement`, `assessment`, `discussion`, `control`, `control_enhancement`, …" },
+                "type":     { "type": "string", "description": "Optional element type filter: `family`, `requirement`, `security_requirement`, `discussion`, `control`, `control_enhancement`, or assessment-guide types `determination`, `examine`, `interview`, `test`, `odp`, …" },
                 "limit":    { "type": "integer", "description": "Max results (default 20, max 200)" },
             },
             "required": ["document", "revision", "query"],
