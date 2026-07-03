@@ -7,4 +7,5 @@ pub mod cmmc;
 pub mod constant;
 pub mod doc;
 pub mod handler;
+pub mod mcp;
 pub mod routing;
