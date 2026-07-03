@@ -98,7 +98,11 @@ impl PoamValidator {
         }
     }
 
-    fn validate_with_score(&self, requirement_id: &str, score: &RequirementScore) -> PoamValidation {
+    fn validate_with_score(
+        &self,
+        requirement_id: &str,
+        score: &RequirementScore,
+    ) -> PoamValidation {
         // Rule 1: Level 1 foundational requirements cannot be deferred
         if score.cmmc_level == CmmcLevel::Level1 && score.is_foundational {
             return PoamValidation {
@@ -198,10 +202,7 @@ impl PoamValidator {
 
     /// Batch validate multiple requirements
     pub fn validate_batch(&self, requirement_ids: &[String]) -> Vec<PoamValidation> {
-        requirement_ids
-            .iter()
-            .map(|id| self.validate(id))
-            .collect()
+        requirement_ids.iter().map(|id| self.validate(id)).collect()
     }
 
     /// Get all requirements that cannot be added to POA&M

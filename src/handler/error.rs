@@ -1,10 +1,7 @@
 use axum::{
     Json,
     http::StatusCode,
-    response::{
-        IntoResponse,
-        Response
-    },
+    response::{IntoResponse, Response},
 };
 use serde_json::Value;
 use thiserror::Error;
@@ -45,50 +42,62 @@ pub enum ApiError {
     /// The endpoint exists but does not support this document type.
     /// `hint` is a JSON object of suggested alternative endpoints.
     #[error("Not implemented: {message}")]
-    NotImplemented { message: String, hint: serde_json::Value },
+    NotImplemented {
+        message: String,
+        hint: serde_json::Value,
+    },
 }
 
 impl IntoResponse for ErrorHandler {
     fn into_response(self) -> Response {
         let (status, error_message) = match self {
-            ErrorHandler::Conflict(ref message) => {
-                (StatusCode::CONFLICT, message.clone())
-            }
-            ErrorHandler::InvalidRequest(ref message) => {
-                (StatusCode::BAD_REQUEST, message.clone())
-            },
-            ErrorHandler::ImATeapot(ref message) => {
-                (StatusCode::IM_A_TEAPOT, message.clone())
-            },
+            ErrorHandler::Conflict(ref message) => (StatusCode::CONFLICT, message.clone()),
+            ErrorHandler::InvalidRequest(ref message) => (StatusCode::BAD_REQUEST, message.clone()),
+            ErrorHandler::ImATeapot(ref message) => (StatusCode::IM_A_TEAPOT, message.clone()),
             ErrorHandler::Database(ref e) => {
                 tracing::error!("Database error: {}", e);
-                (StatusCode::INTERNAL_SERVER_ERROR, "Database error occurred".to_string())
-            },
-            ErrorHandler::BundleNotFound(ref message) => {
-                (StatusCode::NOT_FOUND, message.clone())
-            },
-            ErrorHandler::InvalidVersion(ref message) => {
-                (StatusCode::BAD_REQUEST, message.clone())
-            },
-            ErrorHandler::IncompatibleVersion { ref current, ref required } => {
-                (StatusCode::BAD_REQUEST,
-                 format!("Current version '{}' incompatible. Minimum required: {}", current, required))
-            },
-            ErrorHandler::IncompatibleHardware { ref device, ref required } => {
-                (StatusCode::BAD_REQUEST,
-                 format!("Device hardware '{}' incompatible. Required: {}", device, required))
-            },
-            ErrorHandler::InvalidChannel(ref message) => {
-                (StatusCode::BAD_REQUEST, message.clone())
-            },
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Database error occurred".to_string(),
+                )
+            }
+            ErrorHandler::BundleNotFound(ref message) => (StatusCode::NOT_FOUND, message.clone()),
+            ErrorHandler::InvalidVersion(ref message) => (StatusCode::BAD_REQUEST, message.clone()),
+            ErrorHandler::IncompatibleVersion {
+                ref current,
+                ref required,
+            } => (
+                StatusCode::BAD_REQUEST,
+                format!(
+                    "Current version '{}' incompatible. Minimum required: {}",
+                    current, required
+                ),
+            ),
+            ErrorHandler::IncompatibleHardware {
+                ref device,
+                ref required,
+            } => (
+                StatusCode::BAD_REQUEST,
+                format!(
+                    "Device hardware '{}' incompatible. Required: {}",
+                    device, required
+                ),
+            ),
+            ErrorHandler::InvalidChannel(ref message) => (StatusCode::BAD_REQUEST, message.clone()),
             ErrorHandler::Configuration(ref message) => {
                 tracing::error!("Configuration error: {}", message);
-                (StatusCode::INTERNAL_SERVER_ERROR, "Server configuration error".to_string())
-            },
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Server configuration error".to_string(),
+                )
+            }
             ErrorHandler::Internal(ref message) => {
                 tracing::error!("Internal error: {}", message);
-                (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error".to_string())
-            },
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Internal server error".to_string(),
+                )
+            }
         };
 
         let body: Json<Value> = Json(serde_json::json!({

@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use super::index::SearchIndex;
-use super::model::{Document, Element, NistData, DocumentKey, Relationship};
-use super::scoring::ScoringDatabase;
+use super::model::{Document, DocumentKey, Element, NistData, Relationship};
 use super::poam::PoamValidator;
+use super::scoring::ScoringDatabase;
 
 /// Convenience view over a single loaded document.
 ///
@@ -13,13 +13,13 @@ use super::poam::PoamValidator;
 /// that come with them.
 pub struct DocumentContext<'a> {
     /// All elements in the document
-    pub elements:      &'a [Element],
+    pub elements: &'a [Element],
     /// All relationships in the document
     pub relationships: &'a [Relationship],
     /// Pre-built search index
-    pub index:         &'a SearchIndex,
+    pub index: &'a SearchIndex,
     /// Document metadata (name, version, website, etc.)
-    pub documents:     &'a [Document],
+    pub documents: &'a [Document],
 }
 
 /// Data and index for a single document+revision

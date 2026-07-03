@@ -2,7 +2,7 @@
 
 use serde::Deserialize;
 
-use crate::cmmc::model::{ElementType, NistDocument, FarDocument, DocumentKey, DocumentRevision};
+use crate::cmmc::model::{DocumentKey, DocumentRevision, ElementType, FarDocument, NistDocument};
 use crate::handler::error::ApiError;
 
 /// Returns `Err(NotImplemented)` if `key` is an SP 800-53 document.
@@ -28,7 +28,11 @@ pub fn require_cmmc_structured(key: DocumentKey) -> Result<(), ApiError> {
         return Ok(());
     }
 
-    let base = format!("/v1/nist/{}/{}", key.document_string(), key.revision_string());
+    let base = format!(
+        "/v1/nist/{}/{}",
+        key.document_string(),
+        key.revision_string()
+    );
     Err(ApiError::NotImplemented {
         message: format!(
             "The /families, /requirements, and /security-requirements endpoints use the \
@@ -59,25 +63,42 @@ pub fn parse_nist_document_key(document: &str, revision: &str) -> Result<Documen
         .map_err(|e| ApiError::BadRequest(e))?;
 
     match (doc, rev) {
-        (NistDocument::Sp800053 | NistDocument::Sp800053A | NistDocument::Sp800053B,
-         DocumentRevision::V1 | DocumentRevision::V2) => {
+        (
+            NistDocument::Sp800053 | NistDocument::Sp800053A | NistDocument::Sp800053B,
+            DocumentRevision::V1 | DocumentRevision::V2,
+        ) => {
             return Err(ApiError::BadRequest(
-                "SP 800-53 documents use revisions, not versions. Use r5 (e.g. /sp800-53/r5).".to_string(),
+                "SP 800-53 documents use revisions, not versions. Use r5 (e.g. /sp800-53/r5)."
+                    .to_string(),
             ));
         }
         (NistDocument::Sp800171, DocumentRevision::V1 | DocumentRevision::V2) => {
             return Err(ApiError::BadRequest(
-                "SP 800-171 uses revisions, not versions. Use r1, r2, or r3 (e.g. /sp800-171/r3).".to_string(),
+                "SP 800-171 uses revisions, not versions. Use r1, r2, or r3 (e.g. /sp800-171/r3)."
+                    .to_string(),
             ));
         }
-        (NistDocument::Sp800172, DocumentRevision::Rev1 | DocumentRevision::Rev2 | DocumentRevision::Rev3 | DocumentRevision::Rev5) => {
+        (
+            NistDocument::Sp800172,
+            DocumentRevision::Rev1
+            | DocumentRevision::Rev2
+            | DocumentRevision::Rev3
+            | DocumentRevision::Rev5,
+        ) => {
             return Err(ApiError::BadRequest(
                 "SP 800-172 uses versions, not revisions. Use v1 (e.g. /sp800-172/v1).".to_string(),
             ));
         }
-        (NistDocument::Sp800172A, DocumentRevision::Rev1 | DocumentRevision::Rev2 | DocumentRevision::Rev3 | DocumentRevision::Rev5) => {
+        (
+            NistDocument::Sp800172A,
+            DocumentRevision::Rev1
+            | DocumentRevision::Rev2
+            | DocumentRevision::Rev3
+            | DocumentRevision::Rev5,
+        ) => {
             return Err(ApiError::BadRequest(
-                "SP 800-172A uses versions, not revisions. Use v1 (e.g. /sp800-172a/v1).".to_string(),
+                "SP 800-172A uses versions, not revisions. Use v1 (e.g. /sp800-172a/v1)."
+                    .to_string(),
             ));
         }
         _ => {}
@@ -96,7 +117,10 @@ pub fn parse_far_document_key(document: &str, revision: &str) -> Result<Document
         .map_err(|e| ApiError::BadRequest(e))?;
 
     match (doc, rev) {
-        (FarDocument::Far52_204_21, DocumentRevision::Rev2 | DocumentRevision::Rev3 | DocumentRevision::V1) => {
+        (
+            FarDocument::Far52_204_21,
+            DocumentRevision::Rev2 | DocumentRevision::Rev3 | DocumentRevision::V1,
+        ) => {
             return Err(ApiError::BadRequest(
                 "FAR 52.204-21 uses v2 (e.g. /far/52.204-21/v2).".to_string(),
             ));
@@ -127,7 +151,9 @@ impl ElementQuery {
     pub const MAX_LIMIT: usize = 5000;
 
     pub fn limit(&self) -> usize {
-        self.limit.unwrap_or(Self::DEFAULT_LIMIT).min(Self::MAX_LIMIT)
+        self.limit
+            .unwrap_or(Self::DEFAULT_LIMIT)
+            .min(Self::MAX_LIMIT)
     }
 
     pub fn offset(&self) -> usize {
@@ -138,28 +164,28 @@ impl ElementQuery {
         self.element_type.as_ref().and_then(|t| {
             match t.to_lowercase().as_str() {
                 // SP 800-171 / 800-172 types
-                "family"               => Some(ElementType::Family),
-                "requirement"          => Some(ElementType::Requirement),
+                "family" => Some(ElementType::Family),
+                "requirement" => Some(ElementType::Requirement),
                 "security_requirement" => Some(ElementType::SecurityRequirement),
-                "discussion"           => Some(ElementType::Discussion),
-                "assessment"           => Some(ElementType::Assessment),
-                "adversary_effect"     => Some(ElementType::AdversaryEffect),
-                "protection_strategy"  => Some(ElementType::ProtectionStrategy),
-                "effect"               => Some(ElementType::Effect),
-                "tactic"               => Some(ElementType::Tactic),
-                "impact"               => Some(ElementType::Impact),
-                "expected_result"      => Some(ElementType::ExpectedResult),
-                "example"              => Some(ElementType::Example),
+                "discussion" => Some(ElementType::Discussion),
+                "assessment" => Some(ElementType::Assessment),
+                "adversary_effect" => Some(ElementType::AdversaryEffect),
+                "protection_strategy" => Some(ElementType::ProtectionStrategy),
+                "effect" => Some(ElementType::Effect),
+                "tactic" => Some(ElementType::Tactic),
+                "impact" => Some(ElementType::Impact),
+                "expected_result" => Some(ElementType::ExpectedResult),
+                "example" => Some(ElementType::Example),
                 // SP 800-53 types
-                "control"              => Some(ElementType::Control),
-                "control_enhancement"  => Some(ElementType::ControlEnhancement),
-                "control_statement"    => Some(ElementType::ControlStatement),
-                "control_name_sort"    => Some(ElementType::ControlNameSort),
-                "security_baseline"    => Some(ElementType::SecurityBaseline),
-                "privacy_baseline"     => Some(ElementType::PrivacyBaseline),
-                "reference"            => Some(ElementType::Reference),
-                "public_comment"       => Some(ElementType::PublicComment),
-                _                      => None,
+                "control" => Some(ElementType::Control),
+                "control_enhancement" => Some(ElementType::ControlEnhancement),
+                "control_statement" => Some(ElementType::ControlStatement),
+                "control_name_sort" => Some(ElementType::ControlNameSort),
+                "security_baseline" => Some(ElementType::SecurityBaseline),
+                "privacy_baseline" => Some(ElementType::PrivacyBaseline),
+                "reference" => Some(ElementType::Reference),
+                "public_comment" => Some(ElementType::PublicComment),
+                _ => None,
             }
         })
     }

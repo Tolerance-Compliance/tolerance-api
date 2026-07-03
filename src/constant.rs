@@ -1,47 +1,49 @@
-pub const                         VERSION: &str = env!("CARGO_PKG_VERSION");
-pub const                    SERVICE_NAME: &str = env!("CARGO_PKG_NAME");
-pub const                 HEALTH_ENDPOINT: &str = "/health";
-pub const                    MCP_ENDPOINT: &str = "/mcp";
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+pub const SERVICE_NAME: &str = env!("CARGO_PKG_NAME");
+pub const HEALTH_ENDPOINT: &str = "/health";
+pub const MCP_ENDPOINT: &str = "/mcp";
 
 // NIST API endpoints with :document and :revision parameters
-pub const          NIST_DOCUMENTS_ENDPOINT: &str = "/v1/nist/documents";
-pub const            NIST_SUMMARY_ENDPOINT: &str = "/v1/nist/:document/:revision/summary";
-pub const           NIST_FAMILIES_ENDPOINT: &str = "/v1/nist/:document/:revision/families";
-pub const             NIST_FAMILY_ENDPOINT: &str = "/v1/nist/:document/:revision/families/:id";
-pub const           NIST_ELEMENTS_ENDPOINT: &str = "/v1/nist/:document/:revision/elements";
-pub const            NIST_ELEMENT_ENDPOINT: &str = "/v1/nist/:document/:revision/elements/:id";
-pub const       NIST_REQUIREMENTS_ENDPOINT: &str = "/v1/nist/:document/:revision/requirements";
-pub const      NIST_SECURITY_REQS_ENDPOINT: &str = "/v1/nist/:document/:revision/security-requirements";
-pub const      NIST_RELATIONSHIPS_ENDPOINT: &str = "/v1/nist/:document/:revision/relationships";
-pub const  NIST_ELEMENT_RELATIONS_ENDPOINT: &str = "/v1/nist/:document/:revision/elements/:id/relationships";
+pub const NIST_DOCUMENTS_ENDPOINT: &str = "/v1/nist/documents";
+pub const NIST_SUMMARY_ENDPOINT: &str = "/v1/nist/:document/:revision/summary";
+pub const NIST_FAMILIES_ENDPOINT: &str = "/v1/nist/:document/:revision/families";
+pub const NIST_FAMILY_ENDPOINT: &str = "/v1/nist/:document/:revision/families/:id";
+pub const NIST_ELEMENTS_ENDPOINT: &str = "/v1/nist/:document/:revision/elements";
+pub const NIST_ELEMENT_ENDPOINT: &str = "/v1/nist/:document/:revision/elements/:id";
+pub const NIST_REQUIREMENTS_ENDPOINT: &str = "/v1/nist/:document/:revision/requirements";
+pub const NIST_SECURITY_REQS_ENDPOINT: &str = "/v1/nist/:document/:revision/security-requirements";
+pub const NIST_RELATIONSHIPS_ENDPOINT: &str = "/v1/nist/:document/:revision/relationships";
+pub const NIST_ELEMENT_RELATIONS_ENDPOINT: &str =
+    "/v1/nist/:document/:revision/elements/:id/relationships";
 
 // POA&M validation endpoints
-pub const       POAM_VALIDATE_REQ_ENDPOINT: &str = "/v1/nist/:document/:revision/poam/validate/:requirement_id";
-pub const     POAM_VALIDATE_BATCH_ENDPOINT: &str = "/v1/nist/:document/:revision/poam/validate";
-pub const  POAM_NON_ELIGIBLE_REQS_ENDPOINT: &str = "/v1/nist/:document/:revision/poam/non-eligible";
+pub const POAM_VALIDATE_REQ_ENDPOINT: &str =
+    "/v1/nist/:document/:revision/poam/validate/:requirement_id";
+pub const POAM_VALIDATE_BATCH_ENDPOINT: &str = "/v1/nist/:document/:revision/poam/validate";
+pub const POAM_NON_ELIGIBLE_REQS_ENDPOINT: &str = "/v1/nist/:document/:revision/poam/non-eligible";
 
 // FAR API endpoints with :document and :revision parameters
-pub const             FAR_SUMMARY_ENDPOINT: &str = "/v1/far/:document/:revision/summary";
-pub const            FAR_FAMILIES_ENDPOINT: &str = "/v1/far/:document/:revision/families";
-pub const              FAR_FAMILY_ENDPOINT: &str = "/v1/far/:document/:revision/families/:id";
-pub const            FAR_ELEMENTS_ENDPOINT: &str = "/v1/far/:document/:revision/elements";
-pub const             FAR_ELEMENT_ENDPOINT: &str = "/v1/far/:document/:revision/elements/:id";
-pub const        FAR_REQUIREMENTS_ENDPOINT: &str = "/v1/far/:document/:revision/requirements";
-pub const       FAR_RELATIONSHIPS_ENDPOINT: &str = "/v1/far/:document/:revision/relationships";
-pub const   FAR_ELEMENT_RELATIONS_ENDPOINT: &str = "/v1/far/:document/:revision/elements/:id/relationships";
-
+pub const FAR_SUMMARY_ENDPOINT: &str = "/v1/far/:document/:revision/summary";
+pub const FAR_FAMILIES_ENDPOINT: &str = "/v1/far/:document/:revision/families";
+pub const FAR_FAMILY_ENDPOINT: &str = "/v1/far/:document/:revision/families/:id";
+pub const FAR_ELEMENTS_ENDPOINT: &str = "/v1/far/:document/:revision/elements";
+pub const FAR_ELEMENT_ENDPOINT: &str = "/v1/far/:document/:revision/elements/:id";
+pub const FAR_REQUIREMENTS_ENDPOINT: &str = "/v1/far/:document/:revision/requirements";
+pub const FAR_RELATIONSHIPS_ENDPOINT: &str = "/v1/far/:document/:revision/relationships";
+pub const FAR_ELEMENT_RELATIONS_ENDPOINT: &str =
+    "/v1/far/:document/:revision/elements/:id/relationships";
 
 // Documentation cache durations. The favicon is static, so cache it long. The
 // OpenAPI spec and Swagger UI are generated from the live build and MUST reflect
 // the current deploy — a non-zero cache here is what makes "my API changes
 // aren't showing" after a deploy (browsers keep the old spec for the window).
 // 0 => browsers revalidate every load; the spec is cheap to regenerate.
-pub const           FAVICON_CACHE_DURATION:  u32 = 86400;   // 1 day
-pub const           OPENAPI_CACHE_DURATION:  u32 = 0;       // always fresh
-pub const        SWAGGER_UI_CACHE_DURATION:  u32 = 0;       // always fresh
+pub const FAVICON_CACHE_DURATION: u32 = 86400; // 1 day
+pub const OPENAPI_CACHE_DURATION: u32 = 0; // always fresh
+pub const SWAGGER_UI_CACHE_DURATION: u32 = 0; // always fresh
 
 // Swagger UI HTML
-pub const                  SWAGGER_UI_HTML: &str = r#"<!DOCTYPE html>
+pub const SWAGGER_UI_HTML: &str = r#"<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
