@@ -1,6 +1,7 @@
 pub const                         VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const                    SERVICE_NAME: &str = env!("CARGO_PKG_NAME");
 pub const                 HEALTH_ENDPOINT: &str = "/health";
+pub const                    MCP_ENDPOINT: &str = "/mcp";
 
 // NIST API endpoints with :document and :revision parameters
 pub const          NIST_DOCUMENTS_ENDPOINT: &str = "/v1/nist/documents";

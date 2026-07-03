@@ -28,3 +28,6 @@ dotenvy = "0.15"
 utoipa = { version = "5", features = ["axum_extras"] }
 utoipa-swagger-ui = { version = "9", features = ["axum", "reqwest"] }
 toon-format = "0.4.3"
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }

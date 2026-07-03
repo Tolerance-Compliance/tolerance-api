@@ -80,6 +80,32 @@ Errors always return JSON, and errors use typical HTTP failure codes. See [the H
 
 ---
 
+## MCP Server
+
+The same catalog is exposed as an MCP (Model Context Protocol) tool surface at `POST /mcp`,
+so AI assistants (Cursor, Claude, etc.) can query NIST/FAR text and CMMC POA&M rules as
+native tools. It runs in-process over the same in-memory indexes as the REST API — read-only,
+public standards data only.
+
+Seven tools: `list_documents`, `get_summary`, `search_elements`, `get_element`,
+`get_element_relationships`, `validate_poam`, `get_non_eligible_requirements`.
+Tool results are TOON-encoded text. Both protocol eras are supported: the legacy
+`initialize` handshake (2024-11-05 … 2025-11-25) and the stateless 2026-07-28 style
+(`server/discover`, per-request `_meta`, SEP-2243 `Mcp-Method`/`Mcp-Name` header
+validation). See `src/mcp/mod.rs` for the full protocol posture.
+
+Cursor config (`.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "tolerance-api": { "url": "https://<host>/mcp" }
+  }
+}
+```
+
+---
+
 ## Data Model
 
 ```mermaid

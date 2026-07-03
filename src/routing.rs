@@ -16,7 +16,7 @@ use crate::cmmc::handler::{
 };
 use crate::cmmc::CmmcState;
 use crate::constant::{
-    HEALTH_ENDPOINT,
+    HEALTH_ENDPOINT, MCP_ENDPOINT,
     NIST_DOCUMENTS_ENDPOINT, NIST_ELEMENT_ENDPOINT, NIST_ELEMENT_RELATIONS_ENDPOINT,
     NIST_ELEMENTS_ENDPOINT, NIST_FAMILIES_ENDPOINT, NIST_FAMILY_ENDPOINT,
     NIST_RELATIONSHIPS_ENDPOINT, NIST_REQUIREMENTS_ENDPOINT, NIST_SECURITY_REQS_ENDPOINT,
@@ -46,6 +46,8 @@ pub fn app(state: CmmcState) -> Router {
         .route("/favicon.ico",             get(favicon))
         // Health check
         .route(HEALTH_ENDPOINT,                 get(health_check))
+        // MCP (Model Context Protocol) tool surface — see src/mcp/mod.rs
+        .route(MCP_ENDPOINT,                    post(crate::mcp::handle_mcp))
         // NIST API
         .route(NIST_DOCUMENTS_ENDPOINT,         get(get_documents))
         .route(NIST_SUMMARY_ENDPOINT,           get(get_nist_summary))
