@@ -31,10 +31,14 @@ pub const       FAR_RELATIONSHIPS_ENDPOINT: &str = "/v1/far/:document/:revision/
 pub const   FAR_ELEMENT_RELATIONS_ENDPOINT: &str = "/v1/far/:document/:revision/elements/:id/relationships";
 
 
-// Documentation cache durations
+// Documentation cache durations. The favicon is static, so cache it long. The
+// OpenAPI spec and Swagger UI are generated from the live build and MUST reflect
+// the current deploy — a non-zero cache here is what makes "my API changes
+// aren't showing" after a deploy (browsers keep the old spec for the window).
+// 0 => browsers revalidate every load; the spec is cheap to regenerate.
 pub const           FAVICON_CACHE_DURATION:  u32 = 86400;   // 1 day
-pub const           OPENAPI_CACHE_DURATION:  u32 = 300;     // 5 minutes
-pub const        SWAGGER_UI_CACHE_DURATION:  u32 = 300;     // 5 minutes
+pub const           OPENAPI_CACHE_DURATION:  u32 = 0;       // always fresh
+pub const        SWAGGER_UI_CACHE_DURATION:  u32 = 0;       // always fresh
 
 // Swagger UI HTML
 pub const                  SWAGGER_UI_HTML: &str = r#"<!DOCTYPE html>
