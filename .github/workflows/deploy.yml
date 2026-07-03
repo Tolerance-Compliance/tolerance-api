@@ -7,6 +7,14 @@ on:
       - main
       - master
       - develop
+  # Manual trigger: redeploy current main WITHOUT bumping the version. Use this
+  # to verify the FLY_API_TOKEN secret (Actions -> deploy -> Run workflow), or to
+  # re-push the running image after a Fly-side change. Gates still run.
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Why (e.g. verify FLY token, re-deploy)'
+        required: false
 
 env:
   CARGO_TERM_COLOR: always
@@ -139,9 +147,16 @@ jobs:
           git push origin "v${{ steps.bump.outputs.new-version }}"
 
   deploy-fly:
-    # Deploy to Fly.io after version bump.
+    # Deploy to Fly.io. Two paths in: (1) a push to main, after the version
+    # bump; (2) a manual `workflow_dispatch`, after the gates, with no bump.
     runs-on: ubuntu-latest
-    needs: [version-bump]
+    needs: [clippy, doc, test, version-bump]
+    if: >-
+      always() &&
+      needs.clippy.result == 'success' &&
+      needs.doc.result == 'success' &&
+      needs.test.result == 'success' &&
+      (needs.version-bump.result == 'success' || github.event_name == 'workflow_dispatch')
 
     steps:
       - name: Checkout

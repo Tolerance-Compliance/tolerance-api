@@ -118,10 +118,8 @@ impl SearchIndex {
             let token: &String = &query_tokens[0];
 
             if let Some(matches) = self.inverted_index.get(token) {
-                let results: Vec<usize> = matches
-                    .intersection(&candidate_indices)
-                    .copied()
-                    .collect();
+                let results: Vec<usize> =
+                    matches.intersection(&candidate_indices).copied().collect();
                 if !results.is_empty() {
                     return results;
                 }
@@ -190,8 +188,18 @@ mod tests {
     #[test]
     fn test_search() {
         let elements: Vec<Element> = vec![
-            make_element("03.01", "Access Control", "manage access", ElementType::Family),
-            make_element("03.02", "Training", "security training", ElementType::Family),
+            make_element(
+                "03.01",
+                "Access Control",
+                "manage access",
+                ElementType::Family,
+            ),
+            make_element(
+                "03.02",
+                "Training",
+                "security training",
+                ElementType::Family,
+            ),
         ];
         let index: SearchIndex = SearchIndex::build(&elements);
 

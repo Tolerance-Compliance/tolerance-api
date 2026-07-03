@@ -1,10 +1,7 @@
 use axum::{
     Json,
     http::StatusCode,
-    response::{
-        IntoResponse,
-        Response
-    },
+    response::{IntoResponse, Response},
 };
 use serde_json::Value;
 use thiserror::Error;
@@ -19,7 +16,10 @@ pub enum ApiError {
     /// The endpoint exists but does not support this document type.
     /// `hint` is a JSON object of suggested alternative endpoints.
     #[error("Not implemented: {message}")]
-    NotImplemented { message: String, hint: serde_json::Value },
+    NotImplemented {
+        message: String,
+        hint: serde_json::Value,
+    },
 }
 
 impl IntoResponse for ApiError {

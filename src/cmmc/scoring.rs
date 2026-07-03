@@ -60,17 +60,17 @@ pub struct ScoringDatabase {
 impl ScoringDatabase {
     /// Load from JSON file
     pub fn new() -> Self {
-        let json = std::fs::read_to_string("data/cmmc-scoring.json")
-            .unwrap_or_else(|e| {
-                tracing::warn!("Can't load scoring file: {}", e);
-                String::from("{\"requirements\":{}}")
-            });
+        let json = std::fs::read_to_string("data/cmmc-scoring.json").unwrap_or_else(|e| {
+            tracing::warn!("Can't load scoring file: {}", e);
+            String::from("{\"requirements\":{}}")
+        });
 
-        let file: ScoringFile = serde_json::from_str(&json)
-            .unwrap_or_else(|e| {
-                tracing::warn!("Can't parse scoring JSON: {}", e);
-                ScoringFile { requirements: HashMap::new() }
-            });
+        let file: ScoringFile = serde_json::from_str(&json).unwrap_or_else(|e| {
+            tracing::warn!("Can't parse scoring JSON: {}", e);
+            ScoringFile {
+                requirements: HashMap::new(),
+            }
+        });
 
         let mut scores = HashMap::new();
         for (id, score_json) in file.requirements {

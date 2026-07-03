@@ -5,20 +5,22 @@ use axum::{
     http::HeaderMap,
 };
 
-use crate::cmmc::model::{Document, Element, ElementType, Relationship};
-use crate::cmmc::response::{DataSummary, Family, PaginatedResponse, Requirement, SecurityRequirement};
-use crate::cmmc::state::CmmcState;
 use crate::cmmc::format_response::{FormatResponse, wants_toon};
+use crate::cmmc::model::{Document, Element, ElementType, Relationship};
+use crate::cmmc::response::{
+    DataSummary, Family, PaginatedResponse, Requirement, SecurityRequirement,
+};
+use crate::cmmc::state::CmmcState;
 use crate::handler::error::ApiError;
 
-use super::query::{parse_nist_document_key, require_cmmc_structured, ElementQuery};
+use super::query::{ElementQuery, parse_nist_document_key, require_cmmc_structured};
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct DocumentInfo {
     /// URL path identifier (e.g., "sp800-171/r3")
-    pub id:       String,
+    pub id: String,
     /// Human-readable name
-    pub name:     String,
+    pub name: String,
     /// NIST document identifier
     pub document: String,
     /// Revision string
@@ -89,7 +91,8 @@ pub async fn get_summary(
     headers: HeaderMap,
 ) -> Result<FormatResponse<DataSummary>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
     let summary = DataSummary {
@@ -99,10 +102,10 @@ pub async fn get_summary(
             version: String::new(),
             website: String::new(),
         }),
-        family_count:                doc.index.count_by_type(ElementType::Family),
-        requirement_count:           doc.index.count_by_type(ElementType::Requirement),
-        security_requirement_count:  doc.index.count_by_type(ElementType::SecurityRequirement),
-        relationship_count:          doc.relationships.len(),
+        family_count: doc.index.count_by_type(ElementType::Family),
+        requirement_count: doc.index.count_by_type(ElementType::Requirement),
+        security_requirement_count: doc.index.count_by_type(ElementType::SecurityRequirement),
+        relationship_count: doc.relationships.len(),
     };
 
     Ok(FormatResponse::with_format(summary, wants_toon(&headers)))
@@ -134,14 +137,23 @@ pub async fn get_families(
 ) -> Result<FormatResponse<Vec<Family>>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
     require_cmmc_structured(key)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let families = doc.index
+    let families = doc
+        .index
         .get_by_type(ElementType::Family)
         .iter()
         .filter_map(|&idx| doc.elements.get(idx))
-        .map(|family| build_family(family, doc.elements, state.scoring_db(), state.poam_validator()))
+        .map(|family| {
+            build_family(
+                family,
+                doc.elements,
+                state.scoring_db(),
+                state.poam_validator(),
+            )
+        })
         .collect();
 
     Ok(FormatResponse::with_format(families, wants_toon(&headers)))
@@ -174,21 +186,29 @@ pub async fn get_family(
 ) -> Result<FormatResponse<Family>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
     require_cmmc_structured(key)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let idx = doc.index
+    let idx = doc
+        .index
         .get_by_identifier(&id)
         .ok_or_else(|| ApiError::NotFound(format!("Family '{}' not found", id)))?;
 
-    let family = doc.elements
+    let family = doc
+        .elements
         .get(idx)
         .filter(|e| e.element_type == ElementType::Family)
         .ok_or_else(|| ApiError::NotFound(format!("Family '{}' not found", id)))?;
 
     Ok(FormatResponse::with_format(
-        build_family(family, doc.elements, state.scoring_db(), state.poam_validator()),
-        wants_toon(&headers)
+        build_family(
+            family,
+            doc.elements,
+            state.scoring_db(),
+            state.poam_validator(),
+        ),
+        wants_toon(&headers),
     ))
 }
 
@@ -219,19 +239,20 @@ pub async fn get_elements(
     headers: HeaderMap,
 ) -> Result<FormatResponse<PaginatedResponse<Element>>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
     let filtered: Vec<usize> = match (query.parse_element_type(), &query.search) {
         (Some(et), Some(term)) => doc.index.search(term, Some(et)),
-        (Some(et), None)       => doc.index.get_by_type(et).to_vec(),
-        (None, Some(term))     => doc.index.search(term, None),
-        (None, None)           => (0..doc.elements.len()).collect(),
+        (Some(et), None) => doc.index.get_by_type(et).to_vec(),
+        (None, Some(term)) => doc.index.search(term, None),
+        (None, None) => (0..doc.elements.len()).collect(),
     };
 
-    let total  = filtered.len();
+    let total = filtered.len();
     let offset = query.offset();
-    let limit  = query.limit();
+    let limit = query.limit();
 
     let items = filtered
         .into_iter()
@@ -242,7 +263,13 @@ pub async fn get_elements(
         .collect();
 
     Ok(FormatResponse::with_format(
-        PaginatedResponse { data: items, total, offset, limit, has_more: offset + limit < total },
+        PaginatedResponse {
+            data: items,
+            total,
+            offset,
+            limit,
+            has_more: offset + limit < total,
+        },
         wants_toon(&headers),
     ))
 }
@@ -273,10 +300,12 @@ pub async fn get_element(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Element>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let element = doc.index
+    let element = doc
+        .index
         .get_by_identifier(&id)
         .and_then(|idx| doc.elements.get(idx))
         .cloned()
@@ -311,17 +340,29 @@ pub async fn get_requirements(
 ) -> Result<FormatResponse<Vec<Requirement>>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
     require_cmmc_structured(key)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let requirements = doc.index
+    let requirements = doc
+        .index
         .get_by_type(ElementType::Requirement)
         .iter()
         .filter_map(|&idx| doc.elements.get(idx))
-        .map(|req| build_requirement(req, doc.elements, state.scoring_db(), state.poam_validator()))
+        .map(|req| {
+            build_requirement(
+                req,
+                doc.elements,
+                state.scoring_db(),
+                state.poam_validator(),
+            )
+        })
         .collect();
 
-    Ok(FormatResponse::with_format(requirements, wants_toon(&headers)))
+    Ok(FormatResponse::with_format(
+        requirements,
+        wants_toon(&headers),
+    ))
 }
 
 /// Get all security requirements with discussion and assessment text.
@@ -350,17 +391,24 @@ pub async fn get_security_requirements(
 ) -> Result<FormatResponse<Vec<SecurityRequirement>>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
     require_cmmc_structured(key)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    let security_requirements = doc.index
+    let security_requirements = doc
+        .index
         .get_by_type(ElementType::SecurityRequirement)
         .iter()
         .filter_map(|&idx| doc.elements.get(idx))
-        .map(|sr| build_security_requirement(sr, doc.elements, state.scoring_db(), state.poam_validator()))
+        .map(|sr| {
+            build_security_requirement(sr, doc.elements, state.scoring_db(), state.poam_validator())
+        })
         .collect();
 
-    Ok(FormatResponse::with_format(security_requirements, wants_toon(&headers)))
+    Ok(FormatResponse::with_format(
+        security_requirements,
+        wants_toon(&headers),
+    ))
 }
 
 /// Get all relationships.
@@ -388,10 +436,14 @@ pub async fn get_relationships(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<Relationship>>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
-    Ok(FormatResponse::with_format(doc.relationships.to_vec(), wants_toon(&headers)))
+    Ok(FormatResponse::with_format(
+        doc.relationships.to_vec(),
+        wants_toon(&headers),
+    ))
 }
 
 /// Get relationships for a specific element.
@@ -420,27 +472,32 @@ pub async fn get_element_relationships(
     headers: HeaderMap,
 ) -> Result<FormatResponse<Vec<Relationship>>, ApiError> {
     let key = parse_nist_document_key(&document, &revision)?;
-    let doc = state.get_document(key)
+    let doc = state
+        .get_document(key)
         .ok_or_else(|| ApiError::NotFound(format!("Document {} not loaded", key)))?;
 
     doc.index
         .get_by_identifier(&id)
         .ok_or_else(|| ApiError::NotFound(format!("Element '{}' not found", id)))?;
 
-    let relationships = doc.relationships
+    let relationships = doc
+        .relationships
         .iter()
         .filter(|r| r.source_element_identifier == id || r.dest_element_identifier == id)
         .cloned()
         .collect();
 
-    Ok(FormatResponse::with_format(relationships, wants_toon(&headers)))
+    Ok(FormatResponse::with_format(
+        relationships,
+        wants_toon(&headers),
+    ))
 }
 
 // These are `pub(crate)` so the legacy CMMC handlers in families.rs can reuse
 // them without duplicating the logic.
 
-use crate::cmmc::scoring::ScoringDatabase;
 use crate::cmmc::poam::PoamValidator;
+use crate::cmmc::scoring::ScoringDatabase;
 
 pub(crate) fn build_family(
     family: &Element,
@@ -450,7 +507,7 @@ pub(crate) fn build_family(
 ) -> Family {
     Family {
         identifier: family.element_identifier.clone(),
-        title:      family.title.clone(),
+        title: family.title.clone(),
         requirements: get_family_requirements(family, elements, scoring_db, poam_validator),
     }
 }
@@ -464,7 +521,9 @@ fn get_family_requirements(
     let prefix = format!("{}.", family.element_identifier);
     elements
         .iter()
-        .filter(|e| e.element_type == ElementType::Requirement && e.element_identifier.starts_with(&prefix))
+        .filter(|e| {
+            e.element_type == ElementType::Requirement && e.element_identifier.starts_with(&prefix)
+        })
         .map(|req| build_requirement(req, elements, scoring_db, poam_validator))
         .collect()
 }
@@ -477,12 +536,17 @@ pub(crate) fn build_requirement(
 ) -> Requirement {
     let score = scoring_db.get_score(&req.element_identifier).cloned();
     let poam_validation = Some(poam_validator.validate(&req.element_identifier));
-    
+
     Requirement {
-        identifier:           req.element_identifier.clone(),
-        title:                req.title.clone(),
-        text:                 req.text.clone(),
-        security_requirements: get_security_requirements_for(req, elements, scoring_db, poam_validator),
+        identifier: req.element_identifier.clone(),
+        title: req.title.clone(),
+        text: req.text.clone(),
+        security_requirements: get_security_requirements_for(
+            req,
+            elements,
+            scoring_db,
+            poam_validator,
+        ),
         score,
         poam_validation,
     }
@@ -497,7 +561,10 @@ fn get_security_requirements_for(
     let prefix = format!("SR-{}", req.element_identifier);
     elements
         .iter()
-        .filter(|e| e.element_type == ElementType::SecurityRequirement && e.element_identifier.starts_with(&prefix))
+        .filter(|e| {
+            e.element_type == ElementType::SecurityRequirement
+                && e.element_identifier.starts_with(&prefix)
+        })
         .map(|sr| build_security_requirement(sr, elements, scoring_db, poam_validator))
         .collect()
 }
@@ -516,11 +583,11 @@ pub(crate) fn build_security_requirement(
         .and_then(|id| scoring_db.get_score(id))
         .cloned();
     let poam_validation = parent_id.as_ref().map(|id| poam_validator.validate(id));
-    
+
     SecurityRequirement {
         identifier: sr.element_identifier.clone(),
-        title:      sr.title.clone(),
-        text:       sr.text.clone(),
+        title: sr.title.clone(),
+        text: sr.text.clone(),
         discussion: find_related_text(elements, &sr.element_identifier, ElementType::Discussion),
         assessment: find_related_text(elements, &sr.element_identifier, ElementType::Assessment),
         score,

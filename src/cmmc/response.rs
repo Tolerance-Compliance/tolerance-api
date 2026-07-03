@@ -2,8 +2,8 @@ use serde::Serialize;
 use utoipa::ToSchema;
 
 use super::model::Document;
-use super::scoring::RequirementScore;
 use super::poam::PoamValidation;
+use super::scoring::RequirementScore;
 
 /// A family with its nested requirements (API response)
 #[derive(Debug, Clone, Serialize, ToSchema)]
@@ -57,19 +57,19 @@ pub struct DataSummary {
 /// Paginated response wrapper
 #[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct PaginatedResponse<T> {
-    pub data:     Vec<T>,
-    pub total:    usize,
-    pub limit:    usize,
-    pub offset:   usize,
+    pub data: Vec<T>,
+    pub total: usize,
+    pub limit: usize,
+    pub offset: usize,
     pub has_more: bool,
 }
 
 // type aliases for OpenAPI documentation.
-pub type         ElementListResponse = PaginatedResponse<crate::cmmc::model::Element>;
-pub type          FamilyListResponse = Vec<Family>;
-pub type     RequirementListResponse = Vec<crate::cmmc::model::Element>;
-pub type    RelationshipListResponse = Vec<crate::cmmc::model::Relationship>;
-pub type              FamilyResponse = Family;
-pub type             ElementResponse = crate::cmmc::model::Element;
+pub type ElementListResponse = PaginatedResponse<crate::cmmc::model::Element>;
+pub type FamilyListResponse = Vec<Family>;
+pub type RequirementListResponse = Vec<crate::cmmc::model::Element>;
+pub type RelationshipListResponse = Vec<crate::cmmc::model::Relationship>;
+pub type FamilyResponse = Family;
+pub type ElementResponse = crate::cmmc::model::Element;
 pub type ElementRelationshipResponse = Vec<crate::cmmc::model::Relationship>;
-pub type             SummaryResponse = DataSummary;
+pub type SummaryResponse = DataSummary;

@@ -14,32 +14,32 @@ pub struct NistData {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NistResponse {
-    pub request_type:       i32,
-    pub elements:           NistElements,
+    pub request_type: i32,
+    pub elements: NistElements,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NistElements {
-    pub documents:          Vec<Document>,
+    pub documents: Vec<Document>,
     pub relationship_types: Vec<RelationshipType>,
-    pub elements:           Vec<Element>,
-    pub relationships:      Vec<Relationship>,
+    pub elements: Vec<Element>,
+    pub relationships: Vec<Relationship>,
 }
 
 /// Document metadata
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Document {
-    pub doc_identifier:  String,
+    pub doc_identifier: String,
     pub name: String,
     pub version: String,
-    pub website:                  String,
+    pub website: String,
 }
 
 /// Relationship type definitions
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct RelationshipType {
     pub relationship_identifier: String,
-    pub description:             String,
+    pub description: String,
 }
 
 /// Document source type
@@ -81,12 +81,12 @@ pub enum FarDocument {
 impl NistDocument {
     pub fn as_str(&self) -> &'static str {
         match self {
-            NistDocument::Sp800053  => "sp800-53",
+            NistDocument::Sp800053 => "sp800-53",
             NistDocument::Sp800053A => "sp800-53a",
             NistDocument::Sp800053B => "sp800-53b",
-            NistDocument::Sp800171  => "sp800-171",
+            NistDocument::Sp800171 => "sp800-171",
             NistDocument::Sp800171A => "sp800-171a",
-            NistDocument::Sp800172  => "sp800-172",
+            NistDocument::Sp800172 => "sp800-172",
             NistDocument::Sp800172A => "sp800-172a",
         }
     }
@@ -102,15 +102,16 @@ impl std::str::FromStr for NistDocument {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "sp800-53"   | "800-53"   | "53"   => Ok(NistDocument::Sp800053),
-            "sp800-53a"  | "800-53a"  | "53a"  => Ok(NistDocument::Sp800053A),
-            "sp800-53b"  | "800-53b"  | "53b"  => Ok(NistDocument::Sp800053B),
-            "sp800-171"  | "800-171"  | "171"  => Ok(NistDocument::Sp800171),
+            "sp800-53" | "800-53" | "53" => Ok(NistDocument::Sp800053),
+            "sp800-53a" | "800-53a" | "53a" => Ok(NistDocument::Sp800053A),
+            "sp800-53b" | "800-53b" | "53b" => Ok(NistDocument::Sp800053B),
+            "sp800-171" | "800-171" | "171" => Ok(NistDocument::Sp800171),
             "sp800-171a" | "800-171a" | "171a" => Ok(NistDocument::Sp800171A),
-            "sp800-172"  | "800-172"  | "172"  => Ok(NistDocument::Sp800172),
+            "sp800-172" | "800-172" | "172" => Ok(NistDocument::Sp800172),
             "sp800-172a" | "800-172a" | "172a" => Ok(NistDocument::Sp800172A),
             _ => Err(format!(
-                "Unknown NIST document: '{}'. Use 'sp800-53', 'sp800-53a', 'sp800-53b', 'sp800-171', 'sp800-171a', 'sp800-172', or 'sp800-172a'.", s
+                "Unknown NIST document: '{}'. Use 'sp800-53', 'sp800-53a', 'sp800-53b', 'sp800-171', 'sp800-171a', 'sp800-172', or 'sp800-172a'.",
+                s
             )),
         }
     }
@@ -135,9 +136,7 @@ impl std::str::FromStr for FarDocument {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "52.204-21" | "52.204.21" | "52-204-21" => Ok(FarDocument::Far52_204_21),
-            _ => Err(format!(
-                "Unknown FAR document: '{}'. Use '52.204-21'.", s
-            )),
+            _ => Err(format!("Unknown FAR document: '{}'. Use '52.204-21'.", s)),
         }
     }
 }
@@ -169,8 +168,8 @@ impl DocumentRevision {
             DocumentRevision::Rev2 => "r2",
             DocumentRevision::Rev3 => "r3",
             DocumentRevision::Rev5 => "r5",
-            DocumentRevision::V1   => "v1",
-            DocumentRevision::V2   => "v2",
+            DocumentRevision::V1 => "v1",
+            DocumentRevision::V2 => "v2",
         }
     }
 }
@@ -189,9 +188,12 @@ impl std::str::FromStr for DocumentRevision {
             "r2" | "rev2" | "2" => Ok(DocumentRevision::Rev2),
             "r3" | "rev3" | "3" => Ok(DocumentRevision::Rev3),
             "r5" | "rev5" | "5" => Ok(DocumentRevision::Rev5),
-            "v1" | "1.0"        => Ok(DocumentRevision::V1),
-            "v2" | "2.0"        => Ok(DocumentRevision::V2),
-            _ => Err(format!("Unknown revision: '{}'. Use 'r1', 'r2', 'r3', 'r5', 'v1', or 'v2'.", s)),
+            "v1" | "1.0" => Ok(DocumentRevision::V1),
+            "v2" | "2.0" => Ok(DocumentRevision::V2),
+            _ => Err(format!(
+                "Unknown revision: '{}'. Use 'r1', 'r2', 'r3', 'r5', 'v1', or 'v2'.",
+                s
+            )),
         }
     }
 }
@@ -200,8 +202,14 @@ impl std::str::FromStr for DocumentRevision {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(untagged)]
 pub enum DocumentKey {
-    Nist { document: NistDocument, revision: DocumentRevision },
-    Far { document: FarDocument, revision: DocumentRevision },
+    Nist {
+        document: NistDocument,
+        revision: DocumentRevision,
+    },
+    Far {
+        document: FarDocument,
+        revision: DocumentRevision,
+    },
 }
 
 impl DocumentKey {
@@ -217,16 +225,16 @@ impl DocumentKey {
     pub fn cprt_identifier(&self) -> &'static str {
         match self {
             DocumentKey::Nist { document, revision } => match (document, revision) {
-                (NistDocument::Sp800053,  DocumentRevision::Rev5) => "SP_800_53_5_2_0",
+                (NistDocument::Sp800053, DocumentRevision::Rev5) => "SP_800_53_5_2_0",
                 (NistDocument::Sp800053A, DocumentRevision::Rev5) => "SP_800_53A_5_2_0",
                 (NistDocument::Sp800053B, DocumentRevision::Rev5) => "SP_800_53B_5_2_0",
-                (NistDocument::Sp800171,  DocumentRevision::Rev1) => "sp_800_171_1_0_0",
-                (NistDocument::Sp800171,  DocumentRevision::Rev2) => "sp_800_171_2_0_0",
-                (NistDocument::Sp800171,  DocumentRevision::Rev3) => "sp_800_171_3_0_0",
-                (NistDocument::Sp800171A, DocumentRevision::V1)   => "sp_800_171a_1_0_0",
+                (NistDocument::Sp800171, DocumentRevision::Rev1) => "sp_800_171_1_0_0",
+                (NistDocument::Sp800171, DocumentRevision::Rev2) => "sp_800_171_2_0_0",
+                (NistDocument::Sp800171, DocumentRevision::Rev3) => "sp_800_171_3_0_0",
+                (NistDocument::Sp800171A, DocumentRevision::V1) => "sp_800_171a_1_0_0",
                 (NistDocument::Sp800171A, DocumentRevision::Rev3) => "sp_800_171_a_3_0_0",
-                (NistDocument::Sp800172,  DocumentRevision::V1)   => "sp_800_172_1_0_0",
-                (NistDocument::Sp800172A, DocumentRevision::V1)   => "sp_800_172a_1_0_0",
+                (NistDocument::Sp800172, DocumentRevision::V1) => "sp_800_172_1_0_0",
+                (NistDocument::Sp800172A, DocumentRevision::V1) => "sp_800_172a_1_0_0",
                 _ => "unknown",
             },
             DocumentKey::Far { document, revision } => match (document, revision) {
@@ -240,16 +248,18 @@ impl DocumentKey {
     pub fn display_name(&self) -> String {
         match self {
             DocumentKey::Nist { document, revision } => match (document, revision) {
-                (NistDocument::Sp800053,  DocumentRevision::Rev5) => "SP 800-53 Rev 5".to_string(),
+                (NistDocument::Sp800053, DocumentRevision::Rev5) => "SP 800-53 Rev 5".to_string(),
                 (NistDocument::Sp800053A, DocumentRevision::Rev5) => "SP 800-53A Rev 5".to_string(),
                 (NistDocument::Sp800053B, DocumentRevision::Rev5) => "SP 800-53B Rev 5".to_string(),
-                (NistDocument::Sp800171,  DocumentRevision::Rev1) => "SP 800-171 Rev 1".to_string(),
-                (NistDocument::Sp800171,  DocumentRevision::Rev2) => "SP 800-171 Rev 2".to_string(),
-                (NistDocument::Sp800171,  DocumentRevision::Rev3) => "SP 800-171 Rev 3".to_string(),
-                (NistDocument::Sp800171A, DocumentRevision::V1)   => "SP 800-171A v1.0".to_string(),
-                (NistDocument::Sp800171A, DocumentRevision::Rev3) => "SP 800-171A Rev 3".to_string(),
-                (NistDocument::Sp800172,  DocumentRevision::V1)   => "SP 800-172 v1.0".to_string(),
-                (NistDocument::Sp800172A, DocumentRevision::V1)   => "SP 800-172A v1.0".to_string(),
+                (NistDocument::Sp800171, DocumentRevision::Rev1) => "SP 800-171 Rev 1".to_string(),
+                (NistDocument::Sp800171, DocumentRevision::Rev2) => "SP 800-171 Rev 2".to_string(),
+                (NistDocument::Sp800171, DocumentRevision::Rev3) => "SP 800-171 Rev 3".to_string(),
+                (NistDocument::Sp800171A, DocumentRevision::V1) => "SP 800-171A v1.0".to_string(),
+                (NistDocument::Sp800171A, DocumentRevision::Rev3) => {
+                    "SP 800-171A Rev 3".to_string()
+                }
+                (NistDocument::Sp800172, DocumentRevision::V1) => "SP 800-172 v1.0".to_string(),
+                (NistDocument::Sp800172A, DocumentRevision::V1) => "SP 800-172A v1.0".to_string(),
                 _ => format!("{} {}", document, revision),
             },
             DocumentKey::Far { document, revision } => match (document, revision) {
@@ -292,7 +302,6 @@ impl std::fmt::Display for DocumentKey {
 
 /// Legacy type alias for backward compatibility
 pub type NistDocumentKey = DocumentKey;
-
 
 /// Element types in the NIST data
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
@@ -345,20 +354,20 @@ pub enum ElementType {
 /// A single element (family, requirement, or security requirement)
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Element {
-    pub element_type:       ElementType,
+    pub element_type: ElementType,
     pub element_identifier: String,
-    pub title:              String,
-    pub text:               String,
-    pub doc_identifier:     String,
+    pub title: String,
+    pub text: String,
+    pub doc_identifier: String,
 }
 
 /// Relationship between elements
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Relationship {
     pub source_element_identifier: String,
-    pub source_doc_identifier:     String,
-    pub dest_element_identifier:   String,
-    pub dest_doc_identifier:       String,
-    pub relationship_identifier:   String,
+    pub source_doc_identifier: String,
+    pub dest_element_identifier: String,
+    pub dest_doc_identifier: String,
+    pub relationship_identifier: String,
     pub provenance_doc_identifier: String,
 }

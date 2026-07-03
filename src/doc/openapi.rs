@@ -1,11 +1,11 @@
 //! OpenAPI specification and JSON endpoint.
 
 use axum::{
+    http::{StatusCode, header},
     response::Response,
-    http::{StatusCode, header}
 };
-use utoipa::OpenApi;
 use serde_json;
+use utoipa::OpenApi;
 
 use crate::constant::OPENAPI_CACHE_DURATION;
 
@@ -36,6 +36,8 @@ use crate::constant::OPENAPI_CACHE_DURATION;
         crate::cmmc::handler::far::get_requirements,
         crate::cmmc::handler::far::get_relationships,
         crate::cmmc::handler::far::get_element_relationships,
+        // MCP (Model Context Protocol) tool surface
+        crate::mcp::handler::handle_mcp,
     ),
     components(
         schemas(
@@ -66,6 +68,13 @@ use crate::constant::OPENAPI_CACHE_DURATION;
             crate::cmmc::poam::PoamCondition,
             crate::cmmc::handler::poam::BatchValidationRequest,
             crate::cmmc::handler::poam::BatchValidationResponse,
+            // MCP (Model Context Protocol) wire types
+            crate::mcp::protocol::JsonRpcRequest,
+            crate::mcp::protocol::JsonRpcResponse,
+            crate::mcp::protocol::JsonRpcError,
+            crate::mcp::protocol::ToolDefinition,
+            crate::mcp::protocol::Content,
+            crate::mcp::protocol::CallToolResult,
         )
     ),
     tags(
@@ -73,6 +82,7 @@ use crate::constant::OPENAPI_CACHE_DURATION;
         (name = "NIST",   description = "NIST SP 800-171, 800-171A, 800-172 & 800-172A API"),
         (name = "POA&M",  description = "Plan of Action & Milestones validation API"),
         (name = "FAR",    description = "Federal Acquisition Regulation (FAR) documents API"),
+        (name = "MCP",    description = "Model Context Protocol tool surface (JSON-RPC 2.0) over the same NIST/FAR corpora, for LLM agents."),
     ),
     info(
         title = "Tolerance API",
@@ -152,13 +162,16 @@ pub struct ApiDoc;
 
 pub async fn openapi_json() -> Response<axum::body::Body> {
     let openapi = ApiDoc::openapi();
-    let json = serde_json::to_string_pretty(&openapi)
-        .expect("Failed to serialize OpenAPI specification");
+    let json =
+        serde_json::to_string_pretty(&openapi).expect("Failed to serialize OpenAPI specification");
 
     Response::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/json")
-        .header(header::CACHE_CONTROL, format!("public, max-age={}", OPENAPI_CACHE_DURATION))
+        .header(
+            header::CACHE_CONTROL,
+            format!("public, max-age={}", OPENAPI_CACHE_DURATION),
+        )
         .body(axum::body::Body::from(json))
         .expect("Failed to build OpenAPI JSON response")
 }
