@@ -32,7 +32,21 @@
 //! encoding, 30-40% fewer tokens than JSON) — the consumer of a tool result
 //! is always a model.
 
+//! ## Module layout
+//!
+//! - [`constants`] — every protocol version, header name, limit, and shared
+//!   description string
+//! - [`protocol`] — wire types (JSON-RPC envelope, tool shapes)
+//! - [`handler`] — the axum entry point: parse → validate → dispatch
+//! - [`headers`] — SEP-2243 header/body validation
+//! - [`discovery`] — `initialize` / `server/discover` responses
+//! - [`tools`] — the tool registry; **one file per tool**, shared helpers in
+//!   `tools::support`. Adding a tool = one new file + one registry line.
+
+pub mod constants;
+pub mod discovery;
 pub mod handler;
+pub mod headers;
 pub mod protocol;
 pub mod tools;
 
