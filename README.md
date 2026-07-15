@@ -11,6 +11,13 @@ A Swagger UI is available at [`http://localhost:3000/`](http://localhost:3000/) 
 
 ---
 
+## Deployment
+
+Runs on Fly.io today (`fly.toml`, region `iad`). A migration to Cloudflare
+Containers in the FedRAMP jurisdiction is planned and documented in
+[`MIGRATION.md`](./MIGRATION.md); until it lands, Fly remains the production
+origin for `api.tolerance.app`.
+
 ## Running
 
 > [!TIP]
